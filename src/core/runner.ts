@@ -31,11 +31,15 @@ export function buildArgs(inputValue: string, plugin: ResolvedPlugin): string[] 
 export function runPlugin(
   binPath: string,
   plugin: ResolvedPlugin,
-  inputValue: string
+  inputValue: string,
+  extraArgs: string[] = []
 ): { success: boolean; output?: string; error?: string; exitCode?: number } {
   const args = buildArgs(inputValue, plugin);
 
-  const result = spawnSync("node", [binPath, ...args], {
+  // Append extra arguments passed by the user
+  const allArgs = [...args, ...extraArgs];
+
+  const result = spawnSync("node", [binPath, ...allArgs], {
     input: plugin.inputMapping.type === "stdin" ? inputValue : undefined,
     stdio: ["pipe", "inherit", "inherit"],
     encoding: "utf-8",

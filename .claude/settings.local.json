@@ -6,7 +6,8 @@
       "Bash(npm test:*)",
       "Bash(node:*)",
       "Bash(bash:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "Bash(cat:*)"
     ]
   }
 }

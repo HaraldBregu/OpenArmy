@@ -1,0 +1,17 @@
+{
+  "name": "oa-transform",
+  "version": "1.0.0",
+  "description": "Text transformation agent (uppercase, lowercase, capitalize)",
+  "bin": {
+    "oa-transform": "./bin/cli.js"
+  },
+  "oa": {
+    "description": "Transform text (uppercase, lowercase, capitalize). Use --mode=upper/lower/capitalize",
+    "inputMapping": {
+      "type": "flag",
+      "flag": "--input"
+    }
+  },
+  "files": ["bin/"],
+  "keywords": ["oa", "transform", "text"]
+}

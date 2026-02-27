@@ -36,5 +36,10 @@ fi
 echo -e "${BLUE}ℹ${NC} Installing openarmy via npm..."
 npm install -g openarmy
 
+echo -e "${BLUE}ℹ${NC} Initializing with default agents..."
+oa init
+
 echo -e "${GREEN}✓${NC} OpenArmy installed successfully!"
+echo -e "${GREEN}✓${NC} Default agents installed: oa-transform, oa-count, oa-base64, oa-json"
 echo -e "${GREEN}✓${NC} Try running: ${BLUE}oa --help${NC}"
+echo -e "${GREEN}✓${NC} Or use an agent: ${BLUE}oa run oa-transform --input='hello world' --mode=upper${NC}"

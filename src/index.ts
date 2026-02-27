@@ -5,6 +5,7 @@ import { addCommand } from "./commands/add.js";
 import { runCommand } from "./commands/run.js";
 import { listCommand } from "./commands/list.js";
 import { removeCommand } from "./commands/remove.js";
+import { initCommand } from "./commands/init.js";
 
 const program = new Command();
 
@@ -13,6 +14,7 @@ program
   .description("OpenArmy - CLI tool for managing oa-compatible plugins")
   .version("1.0.0");
 
+program.addCommand(initCommand);
 program.addCommand(addCommand);
 program.addCommand(runCommand);
 program.addCommand(listCommand);

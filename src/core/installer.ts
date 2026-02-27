@@ -5,6 +5,28 @@ import { npmInstall } from "../utils/npm.js";
 import { readJsonFile, ensureDir, fileExists } from "../utils/fs.js";
 import { addEntry } from "./registry.js";
 
+// Determine OpenArmy root directory
+// This works for both development and production installs
+function getOpenArmyRoot(): string {
+  let searchPath = process.cwd();
+
+  // Try to find the agents directory by walking up from cwd
+  for (let i = 0; i < 10; i++) {
+    const agentsPath = path.join(searchPath, "agents");
+    if (fileExists(agentsPath)) {
+      return searchPath;
+    }
+    const parent = path.dirname(searchPath);
+    if (parent === searchPath) break;
+    searchPath = parent;
+  }
+
+  // Fallback: assume we're in dist/core, go up 3 levels
+  return path.join(process.cwd(), "../../..");
+}
+
+const OPENARMY_ROOT = getOpenArmyRoot();
+
 export function validateOaPlugin(pkgJson: PluginPackageJson): { valid: boolean; error?: string } {
   if (!pkgJson.oa) {
     return { valid: false, error: "Package missing 'oa' field in package.json" };
@@ -118,4 +140,84 @@ export function installPlugin(packageName: string): { success: boolean; error?: 
   addEntry(entry);
 
   return { success: true, entry };
+}
+
+export function installLocalAgent(agentName: string): { success: boolean; error?: string; entry?: RegistryEntry } {
+  const localAgentPath = path.join(OPENARMY_ROOT, "agents", agentName);
+  const pkgJsonPath = path.join(localAgentPath, "package.json");
+
+  if (!fileExists(pkgJsonPath)) {
+    return { success: false, error: `Local agent ${agentName} not found` };
+  }
+
+  let pkgJson: PluginPackageJson;
+  try {
+    pkgJson = readJsonFile<PluginPackageJson>(pkgJsonPath);
+  } catch (err) {
+    return { success: false, error: `Failed to parse package.json: ${err instanceof Error ? err.message : String(err)}` };
+  }
+
+  // Validate oa plugin
+  const validation = validateOaPlugin(pkgJson);
+  if (!validation.valid) {
+    return { success: false, error: validation.error };
+  }
+
+  // Resolve bin from local path
+  const { name, bin } = pkgJson;
+  if (!bin) {
+    return { success: false, error: "Package has no bin field defined" };
+  }
+
+  let binName: string;
+  let binPath: string;
+
+  if (typeof bin === "string") {
+    binName = name;
+    binPath = bin;
+  } else {
+    const binNames = Object.keys(bin);
+    if (binNames.length === 0) {
+      return { success: false, error: "Package has no bin field defined" };
+    }
+    binName = binNames[0];
+    binPath = bin[binName];
+  }
+
+  const absoluteBinPath = path.join(localAgentPath, binPath);
+
+  // Create registry entry with local agent path
+  const entry: RegistryEntry = {
+    name: pkgJson.name,
+    version: pkgJson.version,
+    installedAt: new Date().toISOString(),
+    binName: binName,
+    binPath: absoluteBinPath,
+    inputMapping: pkgJson.oa.inputMapping,
+    description: pkgJson.oa.description,
+  };
+
+  // Add to registry
+  addEntry(entry);
+
+  return { success: true, entry };
+}
+
+export function installDefaultAgents(): void {
+  const defaultAgents = ["oa-transform", "oa-count", "oa-base64", "oa-json"];
+
+  // Create packages directory
+  ensureDir(OA_PACKAGES_DIR);
+
+  for (const agent of defaultAgents) {
+    // Try local installation first
+    const localResult = installLocalAgent(agent);
+    if (localResult.success) {
+      continue;
+    }
+
+    // Fall back to npm installation
+    const result = installPlugin(agent);
+    // Silently fail if npm installation also fails
+  }
 }

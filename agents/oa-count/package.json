@@ -1,0 +1,17 @@
+{
+  "name": "oa-count",
+  "version": "1.0.0",
+  "description": "Count text metrics (characters, words, lines)",
+  "bin": {
+    "oa-count": "./bin/cli.js"
+  },
+  "oa": {
+    "description": "Count characters, words, and lines in text. Use --metric=chars/words/lines/all",
+    "inputMapping": {
+      "type": "flag",
+      "flag": "--input"
+    }
+  },
+  "files": ["bin/"],
+  "keywords": ["oa", "count", "text", "analytics"]
+}

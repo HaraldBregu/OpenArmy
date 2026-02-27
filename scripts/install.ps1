@@ -37,5 +37,10 @@ if ($MajorVersion -lt 18) {
 Write-Host "ℹ Installing openarmy via npm..." -ForegroundColor Cyan
 npm install -g openarmy
 
+Write-Host "ℹ Initializing with default agents..." -ForegroundColor Cyan
+oa init
+
 Write-Host "✓ OpenArmy installed successfully!" -ForegroundColor Green
+Write-Host "✓ Default agents installed: oa-transform, oa-count, oa-base64, oa-json" -ForegroundColor Green
 Write-Host "✓ Try running: oa --help" -ForegroundColor Green
+Write-Host "✓ Or use an agent: oa run oa-transform --input='hello world' --mode=upper" -ForegroundColor Green

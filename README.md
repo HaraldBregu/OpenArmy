@@ -21,7 +21,43 @@ iex "& { $(iwr -useb https://raw.githubusercontent.com/openarmy/openarmy/main/sc
 
 ## Usage
 
-### Install a plugin
+### Initialize with default agents (recommended)
+```bash
+oa init
+```
+
+This installs default agents that come with OpenArmy:
+- **oa-transform**: Transform text (uppercase, lowercase, capitalize, reverse, title case)
+- **oa-count**: Count characters, words, and lines
+- **oa-base64**: Encode/decode base64 text
+- **oa-json**: Format, minify, or validate JSON
+
+### List installed plugins
+```bash
+oa list
+```
+
+### Run a plugin/agent
+```bash
+oa run <package-name> --input="<value>"
+```
+
+Examples:
+```bash
+# Transform text
+oa run oa-transform --input="hello world" --mode=upper
+
+# Count metrics
+oa run oa-count --input="Hello World" --metric=words
+
+# Encode to base64
+oa run oa-base64 --input="Hello" --mode=encode
+
+# Format JSON
+echo '{"name":"test"}' | oa run oa-json --mode=format
+```
+
+### Install a custom plugin
 ```bash
 oa add <package-name>
 ```
@@ -31,24 +67,59 @@ Example:
 oa add oa-translate
 ```
 
-### List installed plugins
-```bash
-oa list
-```
-
-### Run a plugin
-```bash
-oa run <package-name> --input="<value>"
-```
-
-Example:
-```bash
-oa run oa-translate --input="Hello"
-```
-
 ### Remove a plugin
 ```bash
 oa remove <package-name>
+```
+
+## Default Agents
+
+OpenArmy comes with 4 built-in agents installed via `oa init`:
+
+### oa-transform
+Text transformation utility with multiple modes:
+- `uppercase` or `upper` - Convert to uppercase
+- `lowercase` or `lower` - Convert to lowercase
+- `capitalize` - Capitalize first letter
+- `reverse` - Reverse the string
+- `title` - Title case
+
+```bash
+oa run oa-transform --input="hello" --mode=upper
+# Output: HELLO
+```
+
+### oa-count
+Count text metrics:
+- `chars` or `characters` - Character count
+- `words` - Word count
+- `lines` - Line count
+- `all` or `json` - All metrics as JSON
+
+```bash
+oa run oa-count --input="Hello World" --metric=words
+# Output: 2
+```
+
+### oa-base64
+Base64 encoding and decoding:
+- `encode` - Encode to base64 (default)
+- `decode` - Decode from base64
+
+```bash
+oa run oa-base64 --input="Hello" --mode=encode
+# Output: SGVsbG8=
+```
+
+### oa-json
+JSON formatting and validation:
+- `format` or `pretty` - Pretty-print JSON (default)
+- `minify` or `compact` - Minify JSON
+- `validate` - Validate JSON syntax
+
+```bash
+echo '{"name":"test","value":123}' | oa run oa-json --mode=minify
+# Output: {"name":"test","value":123}
 ```
 
 ## Creating an oa Plugin

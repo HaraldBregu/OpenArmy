@@ -1,0 +1,16 @@
+{
+  "name": "oa-json",
+  "version": "1.0.0",
+  "description": "JSON formatting and validation agent",
+  "bin": {
+    "oa-json": "./bin/cli.js"
+  },
+  "oa": {
+    "description": "Format, validate, or prettify JSON. Use --mode=format/minify/validate (default: format)",
+    "inputMapping": {
+      "type": "stdin"
+    }
+  },
+  "files": ["bin/"],
+  "keywords": ["oa", "json", "format", "validate"]
+}

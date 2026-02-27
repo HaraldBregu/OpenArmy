@@ -20,6 +20,7 @@
   "files": [
     "dist/",
     "bin/",
+    "agents/",
     "scripts/install.sh",
     "scripts/install.ps1"
   ],
