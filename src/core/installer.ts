@@ -1,6 +1,6 @@
 import path from "path";
-import { PluginPackageJson, InputMapping, RegistryEntry } from "../types.js";
-import { OA_PACKAGES_DIR, OA_HOME } from "../constants.js";
+import { PluginPackageJson, RegistryEntry } from "../types.js";
+import { OA_PACKAGES_DIR } from "../constants.js";
 import { npmInstall } from "../utils/npm.js";
 import { readJsonFile, ensureDir, fileExists } from "../utils/fs.js";
 import { addEntry } from "./registry.js";
@@ -216,8 +216,7 @@ export function installDefaultAgents(): void {
       continue;
     }
 
-    // Fall back to npm installation
-    const result = installPlugin(agent);
-    // Silently fail if npm installation also fails
+    // Fall back to npm installation (silently fail if not available)
+    installPlugin(agent);
   }
 }

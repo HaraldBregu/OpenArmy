@@ -8,7 +8,7 @@ export const runCommand = new Command("run")
   .argument("<package>", "Package name to run")
   .option("--input <value>", "Input value for the plugin")
   .allowUnknownOption(true)
-  .action((packageName: string, options: { input?: string }, command: Command) => {
+  .action((packageName: string, options: { input?: string }) => {
     const plugin = resolvePlugin(packageName);
 
     if (!plugin) {

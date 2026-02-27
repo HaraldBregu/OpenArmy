@@ -7,7 +7,10 @@
       "Bash(node:*)",
       "Bash(bash:*)",
       "Bash(git:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(npm whoami:*)",
+      "Bash(npm publish:*)",
+      "Bash(npm:*)"
     ]
   }
 }
