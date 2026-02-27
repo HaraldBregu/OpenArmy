@@ -1,0 +1,16 @@
+{
+  "name": "oa-echo",
+  "version": "1.0.0",
+  "description": "Simple echo plugin for testing",
+  "bin": {
+    "oa-echo": "./bin/cli.js"
+  },
+  "oa": {
+    "description": "Echoes back the input text",
+    "inputMapping": {
+      "type": "flag",
+      "flag": "--input"
+    }
+  },
+  "files": ["bin/"]
+}

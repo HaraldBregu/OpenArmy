@@ -1,0 +1,51 @@
+{
+  "name": "openarmy",
+  "version": "1.0.0",
+  "description": "CLI tool for installing and running oa-compatible npm plugins",
+  "main": "dist/oa.js",
+  "bin": {
+    "oa": "./bin/oa"
+  },
+  "scripts": {
+    "build": "tsx scripts/build.ts",
+    "build:watch": "tsx scripts/build.ts --watch",
+    "dev": "tsx src/index.ts",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:smoke": "bash tests/smoke.sh",
+    "clean": "rimraf dist",
+    "prepublishOnly": "npm run build && npm run typecheck && npm run lint"
+  },
+  "files": [
+    "dist/",
+    "bin/",
+    "scripts/install.sh",
+    "scripts/install.ps1"
+  ],
+  "keywords": [
+    "cli",
+    "plugin",
+    "npm",
+    "openarmy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "esbuild": "^0.19.11",
+    "eslint": "^8.54.0",
+    "rimraf": "^5.0.5",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
