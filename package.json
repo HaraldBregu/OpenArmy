@@ -1,5 +1,5 @@
 {
-  "name": "openarmy",
+  "name": "@hb_army/openarmy",
   "version": "1.0.0",
   "description": "CLI tool for installing and running oa-compatible npm plugins",
   "main": "dist/oa.js",
@@ -48,5 +48,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -1,2 +1,2 @@
-#!/bin/bash
-exec node "$(dirname "$0")/../dist/oa.js" "$@"
+#!/usr/bin/env node
+require('../dist/oa.js');
