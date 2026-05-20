@@ -197,6 +197,11 @@ export class GatewayServer {
         return;
       }
 
+      if (segments.length === 1 && segments[0] === "mcp" && method === "GET") {
+        this.json(response, 200, { ok: true, data: this.mcpRegistry?.list() ?? [] });
+        return;
+      }
+
       if (segments.length === 2 && segments[0] === "scheduler" && segments[1] === "history" && method === "GET") {
         this.json(response, 200, { ok: true, data: this.scheduler?.history() ?? [] });
         return;
