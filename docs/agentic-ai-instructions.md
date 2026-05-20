@@ -188,6 +188,8 @@ Future tool groups such as shell commands, web search, image generation, browser
 
 Skills should be reusable instruction packages that extend assistant behavior for a specific workflow or domain. Skills do not execute code by themselves; they provide instructions, references, templates, scripts, and metadata that the assistant may load during a run.
 
+Use the Agent Skills format as the compatibility baseline: https://agentskills.io/home. OpenArmy can add runtime-specific metadata, but skills should remain portable folders centered on `SKILL.md`.
+
 Skills can be bundled as built-in skills or installed from the command line. The CLI should support adding skills with:
 
 ```bash
@@ -198,11 +200,61 @@ Built-in skills should live in the packaged runtime. Installed skills should be 
 
 Each skill should include:
 
-- `skill.json`: skill id, name, version, description, permissions, and trigger metadata.
-- `SKILL.md`: primary instructions.
+- `SKILL.md`: required primary instructions with frontmatter metadata such as `name` and `description`.
+- Optional `skill.json`: OpenArmy-specific metadata such as skill id, version, permissions, compatibility, and trigger overrides.
 - Optional `references/`, `scripts/`, `templates/`, or `assets/` directories.
 - Required tool permissions.
 - Version metadata.
+
+Skill loading should use progressive disclosure:
+
+- Discovery: load only each allowed skill's name, description, and minimal metadata into the skill catalog.
+- Activation: when the model or user selects a skill, load the full `SKILL.md` instructions.
+- Execution: load scripts, references, templates, and assets only when the active skill explicitly needs them.
+
+The skill catalog should hide unavailable skills instead of showing blocked skills to the model. A skill should be excluded when the user disabled it, the agent lacks permission, the skill is incompatible with the runtime, or the skill opts out of model-driven activation.
+
+Skill activation should support both model-driven and user-explicit activation. Model-driven activation should let the assistant choose from the filtered skill catalog. User-explicit activation should support a clear command or mention syntax, such as `$skill-name`, resolved by the runtime before the model starts work.
+
+When a skill activates, the runtime should return structured skill content that clearly separates the skill instructions from normal conversation. The activation result should include the skill name, skill directory, primary instructions, and a shallow list of bundled resources without eagerly reading every resource file.
+
+Skill authoring best practices:
+
+- Start from real expertise, working task traces, project artifacts, runbooks, code review comments, failure cases, and fixes.
+- Scope each skill as one coherent unit of work that composes well with other skills.
+- Add what the assistant would otherwise get wrong; omit generic knowledge the model already has.
+- Prefer concise, stepwise guidance with one working example over exhaustive documentation.
+- Include concrete gotchas, default tools or approaches, validation steps, and expected input/output formats.
+- Provide defaults instead of menus of equal options.
+- Use checklists for multi-step workflows and validation loops for fragile or repeatable work.
+- Put large reference material in `references/` and tell the assistant exactly when to load it.
+- Keep `SKILL.md` focused; target less than 500 lines and less than 5,000 tokens.
+
+Skill descriptions should be optimized for reliable activation:
+
+- Write descriptions as instructions to the assistant, such as `Use this skill when...`.
+- Describe user intent and task scope, not internal implementation details.
+- Include near-boundaries and non-obvious cases where the skill should or should not activate.
+- Keep descriptions concise and under 1,024 characters.
+- Evaluate descriptions with realistic should-trigger and should-not-trigger prompts.
+- Use train and validation prompt sets to avoid overfitting descriptions to a small sample.
+
+Scripts bundled with skills should be safe and agent-friendly:
+
+- Keep scripts self-contained or document dependencies clearly.
+- Produce structured output such as JSON, CSV, or TSV when practical.
+- Send machine-readable output to stdout and diagnostics to stderr.
+- Return helpful error messages that explain what failed, what was expected, and what to try next.
+- Support idempotent execution and `--dry-run` for destructive or stateful operations.
+- Keep output sizes predictable and support pagination, offsets, or summary modes for large outputs.
+
+Skills should include evaluation assets when practical:
+
+- Store realistic eval cases in `evals/evals.json`.
+- Include prompts, expected outcomes, and optional input files.
+- Run evals with the skill and without the skill, or against the previous skill version.
+- Use clean workspaces and fresh context for eval runs.
+- Capture output files, assertions, timing, and token usage where available.
 
 The `SkillRegistry` should support:
 
@@ -211,6 +263,9 @@ The `SkillRegistry` should support:
 - Validating skill metadata.
 - Enabling skills per agent.
 - Resolving only the skill context needed for the current run.
+- Returning structured activation content for a selected skill.
+- Deduplicating repeated activations within a run.
+- Protecting active skill instructions from context compaction.
 - Tracking which skills were used during a run.
 
 Skills should not bypass the tool permission model. If a skill needs filesystem, MCP, browser, GitHub, Figma, or network access, the agent must also have permission to use the matching tools.
