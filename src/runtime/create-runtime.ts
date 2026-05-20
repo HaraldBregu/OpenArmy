@@ -44,6 +44,7 @@ export function createRuntime(configOverrides: Partial<RuntimeConfig> = {}): Ope
       ...configOverrides.heartbeat,
     },
     providers: configOverrides.providers ?? base.providers,
+    mcpServers: configOverrides.mcpServers ?? base.mcpServers,
     skillDirectories: configOverrides.skillDirectories ?? base.skillDirectories,
     toolPermissions: configOverrides.toolPermissions ?? base.toolPermissions,
   });
