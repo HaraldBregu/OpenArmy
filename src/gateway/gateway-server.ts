@@ -27,6 +27,7 @@ export class GatewayServer {
     private readonly runtime: AgentRuntime,
     private readonly config: RuntimeConfig["gateway"],
     private readonly scheduler?: Scheduler,
+    private readonly mcpRegistry?: McpRegistry,
   ) {
     this.runtime.on("event", (message: GatewayMessage) => {
       this.broadcast(message);
