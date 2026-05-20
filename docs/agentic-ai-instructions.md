@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-OpenArmy should evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, API gateways, scheduling, heartbeat monitoring, and multi-agent orchestration.
+OpenArmy should evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
 
 This document defines the first implementation direction. Treat each section as a requirement area that can be refined into tickets, architecture docs, and code changes.
 
@@ -13,7 +13,7 @@ The system should implement an agent runtime that can:
 - Execute one or more agents concurrently.
 - Track each agent run from creation to completion.
 - Give every agent an isolated workspace for reading, writing, and persisting task data.
-- Expose agent capabilities through an HTTP API and WebSocket gateway.
+- Expose agent capabilities through an HTTP API.
 - Support basic filesystem tools and other configurable tool groups.
 - Support reusable skills that extend agent behavior.
 - Support multiple model providers with runtime configuration.
@@ -28,6 +28,14 @@ Example installation command:
 ```bash
 curl -fsSL https://friday.example.com/install.sh | bash
 ```
+
+For local development, the project should be executable with:
+
+```bash
+npm run dev
+```
+
+Running `npm run dev` should automatically create and start the local HTTP server for the agent runtime. The local development process should only start the HTTP server.
 
 The installation script should:
 
@@ -51,7 +59,7 @@ The first architecture should include these modules:
 - `ToolRegistry`: registers tool groups and controls which tools an agent can use.
 - `SkillRegistry`: registers skills and resolves skill instructions/assets for an agent.
 - `ModelProviderRegistry`: manages configured model providers and model selection.
-- `GatewayServer`: exposes HTTP and WebSocket interfaces.
+- `HttpServer`: exposes the HTTP API and starts automatically in local development.
 - `Scheduler`: runs agents on cron schedules.
 - `HeartbeatMonitor`: records liveness and detects stalled agents.
 
@@ -194,32 +202,7 @@ Initial endpoint groups:
 
 HTTP responses should use structured JSON envelopes with stable error codes.
 
-## 11. WebSocket Gateway
-
-The WebSocket gateway should provide real-time interaction with running agents.
-
-It should support:
-
-- Starting an interactive agent session.
-- Sending user messages to a run.
-- Streaming model output.
-- Streaming tool events.
-- Streaming status changes.
-- Receiving heartbeat events.
-- Cancelling or pausing a run.
-- Subscribing to run logs.
-
-Every WebSocket message should include:
-
-- Message type.
-- Run id or agent id.
-- Timestamp.
-- Payload.
-- Correlation id when applicable.
-
-The gateway should validate permissions before allowing a client to subscribe to or control a run.
-
-## 12. Isolated Agent Workspaces
+## 11. Isolated Agent Workspaces
 
 Every agent run should receive an isolated workspace.
 
@@ -250,7 +233,7 @@ The workspace should support:
 
 Agents can store data in their isolated workspace, but they should not have unrestricted access to other agents' workspaces.
 
-## 13. Multi-Agent Orchestration
+## 12. Multi-Agent Orchestration
 
 The runtime should support multiple agents running at the same time.
 
@@ -281,7 +264,7 @@ Sub-agent support should allow a parent agent to:
 
 The orchestrator should enforce concurrency limits and prevent runaway agent spawning.
 
-## 14. Scheduler
+## 13. Scheduler
 
 The system should include a cron scheduler for recurring agent runs.
 
@@ -306,7 +289,7 @@ Example schedule configuration:
 }
 ```
 
-## 15. Heartbeat
+## 14. Heartbeat
 
 The runtime should maintain heartbeat tracking for agents and long-running tasks.
 
@@ -314,13 +297,13 @@ Heartbeat requirements:
 
 - Record heartbeat timestamp per active run.
 - Mark runs as stale when the heartbeat timeout is exceeded.
-- Emit heartbeat events through the WebSocket gateway.
+- Expose heartbeat events through HTTP status and log endpoints.
 - Expose heartbeat status through the HTTP API.
 - Allow recovery logic for stalled runs.
 
 Heartbeat state should be visible in run metadata and logs.
 
-## 16. State, Logs, and Audit Trail
+## 15. State, Logs, and Audit Trail
 
 The system should persist enough data to debug and resume agent activity.
 
@@ -340,7 +323,7 @@ Minimum records:
 
 Do not store raw secrets in logs.
 
-## 17. Configuration
+## 16. Configuration
 
 The runtime should support configuration from files and environment variables.
 
@@ -349,7 +332,7 @@ Initial configuration areas:
 - Model providers.
 - Default agent policies.
 - Workspace root.
-- Gateway host and port.
+- HTTP server host and port.
 - Scheduler enabled/disabled.
 - Heartbeat intervals.
 - Tool permissions.
@@ -358,7 +341,7 @@ Initial configuration areas:
 
 Configuration should be validated at startup and surfaced through clear errors.
 
-## 18. Security Requirements
+## 17. Security Requirements
 
 Security should be part of the first design, not an afterthought.
 
@@ -369,14 +352,14 @@ Required controls:
 - Network access policy.
 - Secret redaction in logs.
 - API authentication.
-- WebSocket authorization.
-- Rate limits for API and gateway traffic.
+- HTTP API authorization.
+- Rate limits for HTTP API traffic.
 - Per-agent concurrency limits.
 - Audit logs for mutating operations.
 
 Any tool that can mutate files, run commands, access the network, or call external services should require explicit permission.
 
-## 19. Implementation Phases
+## 18. Implementation Phases
 
 ### Phase 1: Local Runtime Foundation
 
@@ -394,10 +377,9 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Enforce per-agent tool permissions.
 - Track skill and tool usage in run metadata.
 
-### Phase 3: Gateway APIs
+### Phase 3: HTTP API
 
 - Add HTTP API.
-- Add WebSocket gateway.
 - Stream run events and logs.
 - Add structured API errors.
 
@@ -422,14 +404,14 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Add provider usage tracking.
 - Add configurable model policies.
 
-## 20. Open Questions
+## 19. Open Questions
 
 These questions should be resolved as the design improves:
 
 - Should agent definitions live in npm plugin metadata, local config files, or a dedicated registry?
 - Should workspaces be stored under the existing OpenArmy home directory or inside each project?
 - Which model providers should be supported first?
-- Should the HTTP/WebSocket gateway be built into the CLI process or run as a separate server?
+- Should the HTTP server be built into the CLI process or run as a separate server?
 - What authentication model should local development use?
 - How much run history should be retained by default?
 - Should scheduler state be file-based first or database-backed from the start?
