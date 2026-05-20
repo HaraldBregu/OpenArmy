@@ -23,6 +23,8 @@ interface RegisteredTool {
 export class ToolRegistry {
   private readonly tools = new Map<string, RegisteredTool>();
   private readonly groups = new Map<string, Omit<ToolGroupDefinition, "tools">>();
+  private readonly authorizer = new ToolAuthorizer();
+  private readonly auditLogger = new ToolAuditLogger();
 
   constructor(private readonly runTracker?: RunTracker) {}
 
