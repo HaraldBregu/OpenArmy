@@ -61,6 +61,7 @@ export function createRuntime(configOverrides: Partial<RuntimeConfig> = {}): Ope
   skillRegistry.discover();
 
   const providerRegistry = new ModelProviderRegistry(config.providers);
+  const mcpRegistry = new McpRegistry(config.workspaceRoot, config.mcpServers);
   const heartbeatMonitor = new HeartbeatMonitor();
   const runtime = new AgentRuntime({
     agentRegistry,
