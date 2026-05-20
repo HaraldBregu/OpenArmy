@@ -3,6 +3,7 @@ import { Socket } from "net";
 import { createHash } from "crypto";
 import { AgentRuntime } from "../runtime/agent-runtime.js";
 import { OpenArmyError, toErrorPayload } from "../runtime/errors.js";
+import { McpRegistry } from "../mcp/mcp-registry.js";
 import { Scheduler } from "../scheduler/scheduler.js";
 import { ApiEnvelope, GatewayMessage, JsonObject, JsonValue, RuntimeConfig } from "../types.js";
 
