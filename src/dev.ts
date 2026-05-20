@@ -15,7 +15,7 @@ const bundle = createRuntime({
 
 ensureStarterAgent(bundle.runtime as Parameters<typeof ensureStarterAgent>[0]);
 
-const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler);
+const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler, bundle.mcpRegistry);
 
 const address = await gateway.listen();
 
