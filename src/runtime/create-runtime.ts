@@ -28,6 +28,10 @@ export interface OpenArmyRuntimeBundle {
 
 export function createRuntime(configOverrides: Partial<RuntimeConfig> = {}): OpenArmyRuntimeBundle {
   const base = defaultRuntimeConfig();
+  // Derive skillDirectories from the effective workspaceRoot so overriding only
+  // workspaceRoot (common in tests) does not leave skillDirectories pointing at
+  // the process cwd-based default.
+  const effectiveRoot = configOverrides.workspaceRoot ?? base.workspaceRoot;
   const config = validateRuntimeConfig({
     ...base,
     ...configOverrides,
@@ -45,7 +49,11 @@ export function createRuntime(configOverrides: Partial<RuntimeConfig> = {}): Ope
     },
     providers: configOverrides.providers ?? base.providers,
     mcpServers: configOverrides.mcpServers ?? base.mcpServers,
-    skillDirectories: configOverrides.skillDirectories ?? base.skillDirectories,
+    skillDirectories: configOverrides.skillDirectories ?? [
+      ...base.skillDirectories.map((d) =>
+        d.startsWith(base.workspaceRoot) ? d.replace(base.workspaceRoot, effectiveRoot) : d,
+      ),
+    ],
     toolPermissions: configOverrides.toolPermissions ?? base.toolPermissions,
   });
 

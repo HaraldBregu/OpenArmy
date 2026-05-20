@@ -1,0 +1,8 @@
+{
+  "id": "report-writer",
+  "name": "Report Writer",
+  "version": "1.0.0",
+  "description": "Skill: Report Writer",
+  "triggers": [],
+  "requiredTools": []
+}

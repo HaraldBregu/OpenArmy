@@ -1,0 +1,8 @@
+{
+  "id": "reporting",
+  "name": "Reporting",
+  "version": "1.0.0",
+  "description": "Skill: Reporting",
+  "triggers": [],
+  "requiredTools": []
+}
