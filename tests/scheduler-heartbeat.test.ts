@@ -33,11 +33,12 @@ describe("Scheduler", () => {
     const bundle = createRuntime({ workspaceRoot: tempRoot(), scheduler: { enabled: false } });
     const agent = bundle.runtime.registerAgent(agentDefinition());
 
-    await bundle.runtime.startRun(agent.id, { task: "already-active" });
+    const activeRun = bundle.runtime.startRun(agent.id, { task: "already-active" });
     const events = await bundle.scheduler.triggerDue(new Date("2026-05-20T08:00:00.000Z"));
 
     expect(events).toMatchObject([{ status: "skipped", agentId: agent.id }]);
     expect(bundle.scheduler.history()).toHaveLength(1);
+    await activeRun;
   });
 });
 

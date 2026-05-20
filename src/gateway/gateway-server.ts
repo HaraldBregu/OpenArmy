@@ -35,8 +35,19 @@ export class GatewayServer {
       this.handleUpgrade(request, socket as Socket);
     });
 
-    return new Promise((resolve) => {
-      this.server?.listen(this.config.port, this.config.host, () => resolve(this.address()));
+    return new Promise((resolve, reject) => {
+      const onError = (error: Error): void => {
+        this.server?.off("listening", onListening);
+        reject(error);
+      };
+      const onListening = (): void => {
+        this.server?.off("error", onError);
+        resolve(this.address());
+      };
+
+      this.server?.once("error", onError);
+      this.server?.once("listening", onListening);
+      this.server?.listen(this.config.port, this.config.host);
     });
   }
 
@@ -47,6 +58,11 @@ export class GatewayServer {
     this.clients.clear();
 
     if (!this.server) {
+      return Promise.resolve();
+    }
+
+    if (!this.server.listening) {
+      this.server = undefined;
       return Promise.resolve();
     }
 

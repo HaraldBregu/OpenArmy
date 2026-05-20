@@ -22,7 +22,7 @@ describe("AgentRuntime", () => {
     const completed = await bundle.runtime.waitForRun(run.id);
 
     expect(completed.status).toBe("completed");
-    expect(completed.workspacePath).toContain(path.join(".openarmy-test", "agents", agent.id, "runs", run.id, "workspace"));
+    expect(completed.workspacePath).toContain(path.join("agents", agent.id, "runs", run.id, "workspace"));
     expect(fs.existsSync(path.join(bundle.config.workspaceRoot, "agents", agent.id, "runs", run.id, "state.json"))).toBe(true);
     expect(completed.modelProviderUsage).toHaveLength(1);
     expect(completed.output).toMatchObject({
@@ -80,10 +80,11 @@ describe("AgentRuntime", () => {
     const bundle = testRuntime();
     const agent = bundle.runtime.registerAgent(agentDefinition({ concurrency: 1 }));
 
-    await bundle.runtime.startRun(agent.id, { task: "first" });
+    const firstRun = bundle.runtime.startRun(agent.id, { task: "first" });
     await expect(bundle.runtime.startRun(agent.id, { task: "second" })).rejects.toMatchObject({
       code: "CONFLICT",
     });
+    await firstRun;
   });
 
   it("loads enabled skills and tracks usage on the run", async () => {
