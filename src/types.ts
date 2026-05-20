@@ -20,6 +20,27 @@ export interface AgentToolGrant {
   permissions?: string[];
 }
 
+export interface AgentMcpGrant {
+  serverId: string;
+  tools?: string[];
+  resources?: string[];
+}
+
+export interface McpServerConfig {
+  id: string;
+  name: string;
+  transport: "stdio" | "http";
+  command?: string;
+  args?: string[];
+  url?: string;
+  env?: string[];
+  workingDirectory?: string;
+  enabled: boolean;
+  toolPermissions: string[];
+  resourcePermissions: string[];
+  metadata?: JsonObject;
+}
+
 export interface WorkspacePolicy {
   isolationMode: "run" | "agent";
   maxBytes?: number;
