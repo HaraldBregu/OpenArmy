@@ -91,6 +91,7 @@ Each agent should be configurable with:
 - `model`: default model selection.
 - `provider`: default model provider.
 - `tools`: allowed tool groups and tool-level permissions.
+- `mcpServers`: allowed custom MCP servers and MCP tool permissions.
 - `skills`: enabled skills.
 - `workspacePolicy`: storage limits and isolation mode.
 - `schedule`: optional cron configuration.
@@ -252,6 +253,7 @@ Initial endpoint groups:
 - `GET /runs/:id/logs`: stream or page run logs.
 - `GET /tools`: list available tool groups.
 - `GET /skills`: list available skills.
+- `GET /mcp`: list configured MCP servers.
 - `GET /providers`: list configured model providers.
 
 HTTP responses should use structured JSON envelopes with stable error codes.
@@ -370,6 +372,7 @@ Minimum records:
 - Model requests and responses metadata.
 - Tool calls and results.
 - Skill load events.
+- MCP configuration events, tool calls, and resource reads.
 - Filesystem mutations.
 - Scheduler events.
 - Heartbeat events.
@@ -391,6 +394,7 @@ Initial configuration areas:
 - Heartbeat intervals.
 - Tool permissions.
 - Skill directories.
+- MCP server definitions.
 - Log level.
 
 Configuration should be validated at startup and surfaced through clear errors.
@@ -404,6 +408,7 @@ Required controls:
 - Workspace isolation.
 - Tool permission checks.
 - Network access policy.
+- MCP server and MCP tool permission checks.
 - Secret redaction in logs.
 - API authentication.
 - HTTP API authorization.
@@ -413,7 +418,38 @@ Required controls:
 
 Any tool that can mutate files, run commands, access the network, or call external services should require explicit permission.
 
-## 18. Implementation Phases
+## 18. Testing Requirements
+
+Every implementation change should include automated tests unless the change is documentation-only or explicitly marked as untestable with a short reason.
+
+The project should use the existing test commands:
+
+```bash
+npm test
+npm run typecheck
+npm run test:smoke
+```
+
+Use Vitest for unit and integration tests. Use smoke tests for CLI startup, local runtime startup, and HTTP server startup.
+
+Required test coverage areas:
+
+- `RuntimeCore` composition shared by CLI, Node.js API, and HTTP server.
+- Agent registration, run creation, status transitions, cancellation, and concurrency limits.
+- Workspace creation, run isolation, path traversal rejection, symlink escape rejection, and read/write size limits.
+- Filesystem tools for successful reads, writes, appends, patches, listings, moves, deletes, metadata, and search.
+- Tool permission failures and audit logs for mutating operations.
+- Skill registry behavior for built-in skills and installed skills through `oa skills -a "name of skill"`.
+- MCP registry behavior for custom MCP configuration through `oa mcp -a "example"`.
+- MCP permission enforcement so custom MCP tools are unavailable unless explicitly allowed for the agent.
+- HTTP API JSON envelopes, stable error codes, authentication, authorization, and rate limits.
+- Scheduler execution, skipped overlapping runs, missed runs, and schedule history.
+- Heartbeat updates, stale-run detection, and heartbeat events in run metadata.
+- Secret redaction in logs, audit records, tool results, and error responses.
+
+Tests should use temporary workspaces and must clean up after themselves. Tests should not depend on external network access unless they are explicitly integration tests that can be skipped in local development.
+
+## 19. Implementation Phases
 
 ### Phase 1: Local Runtime Foundation
 
@@ -423,19 +459,23 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Add filesystem tools.
 - Add basic model provider abstraction.
 - Add local CLI commands for agent runs.
+- Add tests for runtime creation, workspace isolation, filesystem tools, and CLI run startup.
 
-### Phase 2: Skills and Tool Registry
+### Phase 2: Skills, Tool Registry, and MCP
 
 - Add skill registry.
 - Add tool registry.
+- Add MCP registry and `oa mcp -a "example"` configuration command.
 - Enforce per-agent tool permissions.
 - Track skill and tool usage in run metadata.
+- Add tests for skill installation, MCP registration, tool permissions, and audit logs.
 
 ### Phase 3: HTTP API
 
 - Add HTTP API.
 - Stream run events and logs.
 - Add structured API errors.
+- Add tests for health, agents, runs, tools, skills, MCP, providers, logs, auth, and rate limits.
 
 ### Phase 4: Scheduling and Heartbeat
 
@@ -443,6 +483,7 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Add heartbeat monitor.
 - Add stale-run detection.
 - Add recovery or cancellation policy.
+- Add tests for scheduler history, overlap prevention, heartbeat updates, and stale-run detection.
 
 ### Phase 5: Multi-Agent Orchestration
 
@@ -450,6 +491,7 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Track parent/child run relationships.
 - Add concurrency limits.
 - Add orchestration logs and status views.
+- Add tests for parent/child run tracking, spawn limits, waiting, resume, close, and cancellation.
 
 ### Phase 6: Provider Expansion
 
@@ -457,8 +499,9 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Add provider fallback.
 - Add provider usage tracking.
 - Add configurable model policies.
+- Add tests for provider selection, fallback, retry policy, usage metadata, and timeout handling.
 
-## 19. Open Questions
+## 20. Open Questions
 
 These questions should be resolved as the design improves:
 
