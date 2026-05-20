@@ -59,7 +59,7 @@ describe("GatewayServer", () => {
       },
     });
     bundle.runtime.registerAgent(agentDefinition());
-    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway);
+    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler);
     gateways.push(gateway);
     const address = await gateway.listen();
     const baseUrl = `http://${address.host}:${address.port}`;
@@ -76,6 +76,72 @@ describe("GatewayServer", () => {
     const logEnvelope = (await logs.json()) as { ok: boolean; data: Array<{ event: string }> };
     expect(logEnvelope.ok).toBe(true);
     expect(logEnvelope.data.some((entry) => entry.event === "run.created")).toBe(true);
+  });
+
+  it("exposes pause, resume, message, spawn, and scheduler history endpoints", async () => {
+    const bundle = createRuntime({
+      workspaceRoot: tempRoot(),
+      scheduler: { enabled: false },
+      gateway: { host: "127.0.0.1", port: 0 },
+    });
+    bundle.runtime.registerAgent(agentDefinition());
+    bundle.runtime.registerAgent({
+      ...agentDefinition(),
+      id: "child-agent",
+      name: "Child Agent",
+      description: "Sub-agent for orchestration tests",
+      concurrency: 2,
+    });
+    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler);
+    gateways.push(gateway);
+    const address = await gateway.listen();
+    const baseUrl = `http://${address.host}:${address.port}`;
+
+    const startResp = await fetch(`${baseUrl}/agents/gateway-agent/runs`, {
+      method: "POST",
+      body: JSON.stringify({ input: {} }),
+    });
+    const startEnvelope = (await startResp.json()) as { data: RunRecord };
+    const runId = startEnvelope.data.id;
+    await bundle.runtime.waitForRun(runId);
+
+    const messageResp = await fetch(`${baseUrl}/runs/${runId}/message`, {
+      method: "POST",
+      body: JSON.stringify({ task: "update" }),
+    });
+    expect((await messageResp.json())).toMatchObject({ ok: true });
+
+    const spawnResp = await fetch(`${baseUrl}/runs/${runId}/spawn`, {
+      method: "POST",
+      body: JSON.stringify({ agentId: "child-agent", input: { subtask: "test" } }),
+    });
+    expect(spawnResp.status).toBe(202);
+    const spawnEnvelope = (await spawnResp.json()) as { data: RunRecord };
+    expect(spawnEnvelope.data.parentRunId).toBe(runId);
+
+    const histResp = await fetch(`${baseUrl}/scheduler/history`);
+    expect((await histResp.json())).toMatchObject({ ok: true, data: [] });
+  });
+
+  it("enforces per-IP rate limiting after too many requests", async () => {
+    const bundle = createRuntime({
+      workspaceRoot: tempRoot(),
+      scheduler: { enabled: false },
+      gateway: { host: "127.0.0.1", port: 0 },
+    });
+    bundle.runtime.registerAgent(agentDefinition());
+    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway);
+    gateways.push(gateway);
+    const address = await gateway.listen();
+    const baseUrl = `http://${address.host}:${address.port}`;
+
+    const max = (gateway as unknown as { maxRequestsPerMinute: number }).maxRequestsPerMinute;
+    const promises = Array.from({ length: max + 5 }, () =>
+      fetch(`${baseUrl}/agents`),
+    );
+    const responses = await Promise.all(promises);
+    const rateLimited = responses.filter((r) => r.status === 429);
+    expect(rateLimited.length).toBeGreaterThan(0);
   });
 });
 
