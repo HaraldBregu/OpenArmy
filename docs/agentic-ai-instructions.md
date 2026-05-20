@@ -254,7 +254,7 @@ Initial endpoint groups:
 - `GET /agents/:id`: get agent details.
 - `PATCH /agents/:id`: update an agent definition.
 - `DELETE /agents/:id`: remove or disable an agent.
-- `POST /agents/:id/runs`: start a run.
+- `POST /agents/:id/runs`: start a run with a prompt and optional files.
 - `GET /runs`: list runs.
 - `GET /runs/:id`: get run status and metadata.
 - `POST /runs/:id/cancel`: cancel a run.
@@ -263,6 +263,14 @@ Initial endpoint groups:
 - `GET /skills`: list available skills.
 - `GET /mcp`: list configured MCP servers.
 - `GET /providers`: list configured model providers.
+
+Run creation through `POST /agents/:id/runs` should accept:
+
+- `prompt`: the user instruction for the run.
+- `files`: optional uploaded files or file references to place in the run input workspace.
+- `metadata`: optional structured caller metadata.
+
+The HTTP API should support `application/json` requests for prompt-only runs and `multipart/form-data` requests for prompt plus file uploads. Uploaded files should be copied into the run's `input/` directory, recorded in run metadata, and made available to the assistant through workspace-scoped filesystem tools.
 
 HTTP responses should use structured JSON envelopes with stable error codes.
 
@@ -281,6 +289,8 @@ Workspace layout recommendation:
       runs/
         <run-id>/
           input/
+            prompt.txt
+            files/
           output/
           workspace/
           logs/
@@ -290,6 +300,7 @@ Workspace layout recommendation:
 The workspace should support:
 
 - Run-local files.
+- Uploaded input files and the original prompt.
 - Agent-level persistent memory.
 - Structured state snapshots.
 - Tool output artifacts.
@@ -377,6 +388,7 @@ Minimum records:
 - Run metadata.
 - Run status transitions.
 - User inputs.
+- Uploaded file metadata, including original filename, stored path, size, and content type.
 - Model requests and responses metadata.
 - Tool calls and results.
 - Skill load events.
@@ -398,6 +410,7 @@ Initial configuration areas:
 - Default agent policies.
 - Workspace root.
 - HTTP server host and port.
+- HTTP request body, prompt, and upload size limits.
 - Scheduler enabled/disabled.
 - Heartbeat intervals.
 - Tool permissions.
@@ -420,6 +433,7 @@ Required controls:
 - Secret redaction in logs.
 - API authentication.
 - HTTP API authorization.
+- Upload filename sanitization, content type validation, and file size limits.
 - Rate limits for HTTP API traffic.
 - Per-agent concurrency limits.
 - Audit logs for mutating operations.
@@ -452,6 +466,7 @@ Required test coverage areas:
 - MCP registry behavior for custom MCP configuration through `oa mcp -a "example"`.
 - MCP permission enforcement so custom MCP tools are unavailable unless explicitly allowed for the agent.
 - HTTP API JSON envelopes, stable error codes, authentication, authorization, and rate limits.
+- HTTP run creation with prompt-only JSON, multipart prompt plus files, upload size limits, filename sanitization, and run input workspace persistence.
 - Scheduler execution, skipped overlapping runs, missed runs, and schedule history.
 - Heartbeat updates, stale-run detection, and heartbeat events in run metadata.
 - Secret redaction in logs, audit records, tool results, and error responses.
