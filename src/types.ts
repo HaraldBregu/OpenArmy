@@ -148,6 +148,13 @@ export interface RunError {
   details?: JsonObject;
 }
 
+export interface UploadedFileRecord {
+  originalName: string;
+  storedPath: string;
+  size: number;
+  contentType: string;
+}
+
 export interface RunRecord {
   id: string;
   agentId: string;
@@ -157,11 +164,13 @@ export interface RunRecord {
   startedAt: string;
   updatedAt: string;
   completedAt?: string;
+  prompt?: string;
   input?: JsonValue;
   output?: JsonValue;
   toolCalls: ToolCallRecord[];
   skillUsage: SkillUsageRecord[];
   modelProviderUsage: ModelProviderUsageRecord[];
+  uploadedFiles?: UploadedFileRecord[];
   workspacePath: string;
   heartbeat: HeartbeatState;
   error?: RunError;
