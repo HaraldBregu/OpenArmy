@@ -195,6 +195,23 @@ export class GatewayServer {
         return;
       }
 
+      if (segments.length === 2 && segments[0] === "scheduler" && segments[1] === "history" && method === "GET") {
+        this.json(response, 200, { ok: true, data: this.scheduler?.history() ?? [] });
+        return;
+      }
+
+      if (segments.length === 3 && segments[0] === "runs" && segments[2] === "spawn" && method === "POST") {
+        const body = await this.readBody<JsonObject>(request);
+        const agentId = typeof body.agentId === "string" ? body.agentId : undefined;
+        if (!agentId) {
+          throw new OpenArmyError("BAD_REQUEST", "agentId is required", 400);
+        }
+        const input = body.input ?? {};
+        const run = await this.runtime.spawnSubAgent(segments[1], agentId, input);
+        this.json(response, 202, { ok: true, data: run });
+        return;
+      }
+
       throw new OpenArmyError("ROUTE_NOT_FOUND", `${method} ${url.pathname} is not supported`, 404);
     } catch (error) {
       const payload = toErrorPayload(error);
