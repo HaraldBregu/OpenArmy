@@ -3,6 +3,7 @@ import { Socket } from "net";
 import { createHash } from "crypto";
 import { AgentRuntime } from "../runtime/agent-runtime.js";
 import { OpenArmyError, toErrorPayload } from "../runtime/errors.js";
+import { Scheduler } from "../scheduler/scheduler.js";
 import { ApiEnvelope, GatewayMessage, JsonObject, JsonValue, RuntimeConfig } from "../types.js";
 
 interface WebSocketClient {
@@ -10,13 +11,21 @@ interface WebSocketClient {
   subscriptions: Set<string>;
 }
 
+interface RateLimitRecord {
+  count: number;
+  resetAt: number;
+}
+
 export class GatewayServer {
   private server?: Server;
   private readonly clients = new Set<WebSocketClient>();
+  private readonly rateLimits = new Map<string, RateLimitRecord>();
+  private readonly maxRequestsPerMinute = 120;
 
   constructor(
     private readonly runtime: AgentRuntime,
     private readonly config: RuntimeConfig["gateway"],
+    private readonly scheduler?: Scheduler,
   ) {
     this.runtime.on("event", (message: GatewayMessage) => {
       this.broadcast(message);
