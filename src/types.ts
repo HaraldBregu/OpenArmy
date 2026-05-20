@@ -320,6 +320,7 @@ export interface RuntimeConfig {
   heartbeat: AgentHeartbeatPolicy;
   skillDirectories: string[];
   providers: ModelProviderConfig[];
+  mcpServers: McpServerConfig[];
   logLevel: "debug" | "info" | "warn" | "error";
   toolPermissions: AgentToolGrant[];
 }
