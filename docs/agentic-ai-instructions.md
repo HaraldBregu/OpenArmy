@@ -19,7 +19,28 @@ The system should implement an agent runtime that can:
 - Support multiple model providers with runtime configuration.
 - Support cron-based scheduling and heartbeat health checks.
 
-## 3. Core Architecture
+## 3. Installation and Bootstrap
+
+The system should support installation on every target machine through a bootstrap script that can be executed with `curl`.
+
+Example installation command:
+
+```bash
+curl -fsSL https://friday.example.com/install.sh | bash
+```
+
+The installation script should:
+
+- Detect the operating system and CPU architecture.
+- Install or update the OpenArmy runtime.
+- Create the required local directories.
+- Initialize default configuration files.
+- Register bundled tools and skills.
+- Validate that the CLI and runtime can start successfully.
+
+The script should be idempotent so it can be safely re-run for upgrades or repairs.
+
+## 4. Core Architecture
 
 The first architecture should include these modules:
 
@@ -36,7 +57,7 @@ The first architecture should include these modules:
 
 Keep these boundaries explicit so the CLI, HTTP API, scheduler, and future UI can all use the same runtime services.
 
-## 4. Agent Definition
+## 5. Agent Definition
 
 An agent definition should describe what an agent is allowed to do and how it runs.
 
@@ -57,7 +78,7 @@ Each agent should be configurable with:
 
 Agent definitions should be serializable so they can be stored in configuration files, a local registry, or later a database.
 
-## 5. Tool System
+## 6. Tool System
 
 The agent runtime should expose tools through a controlled registry. Tools should not be called directly without permission checks.
 
@@ -85,7 +106,7 @@ Each tool should define:
 
 The runtime should enforce tool authorization per agent and per run.
 
-## 6. Basic Filesystem Tools
+## 7. Basic Filesystem Tools
 
 The first tool implementation should include basic filesystem operations scoped to the agent workspace:
 
@@ -109,7 +130,7 @@ Recommended safety rules:
 - Prefer patch-based edits for existing files.
 - Enforce size limits on reads and writes.
 
-## 7. Skills
+## 8. Skills
 
 Skills should be reusable instruction packages that extend agent behavior for a specific workflow or domain.
 
@@ -131,7 +152,7 @@ The runtime should support:
 
 Skills should not bypass the tool permission model. If a skill needs filesystem, browser, GitHub, Figma, or network access, the agent must also have permission to use the matching tools.
 
-## 8. Model Providers
+## 9. Model Providers
 
 The system should support multiple configurable model providers.
 
@@ -150,7 +171,7 @@ Each provider configuration should include:
 
 The runtime should allow agents to choose from configured providers according to policy. Provider selection can be static per agent at first, then later become dynamic based on task type, cost, latency, context length, or fallback rules.
 
-## 9. HTTP API
+## 10. HTTP API
 
 The HTTP API should expose management and execution endpoints.
 
@@ -173,7 +194,7 @@ Initial endpoint groups:
 
 HTTP responses should use structured JSON envelopes with stable error codes.
 
-## 10. WebSocket Gateway
+## 11. WebSocket Gateway
 
 The WebSocket gateway should provide real-time interaction with running agents.
 
@@ -198,7 +219,7 @@ Every WebSocket message should include:
 
 The gateway should validate permissions before allowing a client to subscribe to or control a run.
 
-## 11. Isolated Agent Workspaces
+## 12. Isolated Agent Workspaces
 
 Every agent run should receive an isolated workspace.
 
@@ -229,7 +250,7 @@ The workspace should support:
 
 Agents can store data in their isolated workspace, but they should not have unrestricted access to other agents' workspaces.
 
-## 12. Multi-Agent Orchestration
+## 13. Multi-Agent Orchestration
 
 The runtime should support multiple agents running at the same time.
 
@@ -260,7 +281,7 @@ Sub-agent support should allow a parent agent to:
 
 The orchestrator should enforce concurrency limits and prevent runaway agent spawning.
 
-## 13. Scheduler
+## 14. Scheduler
 
 The system should include a cron scheduler for recurring agent runs.
 
@@ -285,7 +306,7 @@ Example schedule configuration:
 }
 ```
 
-## 14. Heartbeat
+## 15. Heartbeat
 
 The runtime should maintain heartbeat tracking for agents and long-running tasks.
 
@@ -299,7 +320,7 @@ Heartbeat requirements:
 
 Heartbeat state should be visible in run metadata and logs.
 
-## 15. State, Logs, and Audit Trail
+## 16. State, Logs, and Audit Trail
 
 The system should persist enough data to debug and resume agent activity.
 
@@ -319,7 +340,7 @@ Minimum records:
 
 Do not store raw secrets in logs.
 
-## 16. Configuration
+## 17. Configuration
 
 The runtime should support configuration from files and environment variables.
 
@@ -337,7 +358,7 @@ Initial configuration areas:
 
 Configuration should be validated at startup and surfaced through clear errors.
 
-## 17. Security Requirements
+## 18. Security Requirements
 
 Security should be part of the first design, not an afterthought.
 
@@ -355,7 +376,7 @@ Required controls:
 
 Any tool that can mutate files, run commands, access the network, or call external services should require explicit permission.
 
-## 18. Implementation Phases
+## 19. Implementation Phases
 
 ### Phase 1: Local Runtime Foundation
 
@@ -401,7 +422,7 @@ Any tool that can mutate files, run commands, access the network, or call extern
 - Add provider usage tracking.
 - Add configurable model policies.
 
-## 19. Open Questions
+## 20. Open Questions
 
 These questions should be resolved as the design improves:
 
@@ -412,4 +433,3 @@ These questions should be resolved as the design improves:
 - What authentication model should local development use?
 - How much run history should be retained by default?
 - Should scheduler state be file-based first or database-backed from the start?
-
