@@ -81,7 +81,7 @@ export class WorkspaceManager {
     }
   }
 
-  appendAudit(workspace: RunWorkspace, event: string, metadata: Record<string, unknown>): void {
+  appendAudit(workspace: RunWorkspace, event: string, metadata: JsonObject): void {
     appendJsonLine(path.join(workspace.logsPath, "audit.jsonl"), {
       id: randomUUID(),
       timestamp: new Date().toISOString(),
