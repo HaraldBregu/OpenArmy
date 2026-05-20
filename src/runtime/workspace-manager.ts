@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import { AgentDefinition, JsonObject, RunWorkspace } from "../types.js";
+import { validationError } from "./errors.js";
 import { appendJsonLine, ensureDir, writeJsonFile } from "./json-store.js";
 import { WorkspacePathGuard } from "../tools/workspace-path-guard.js";
 
