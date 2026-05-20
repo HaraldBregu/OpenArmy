@@ -107,18 +107,18 @@ The minimal assistant should ship with a controlled tool system. The first usabl
 
 The first implementation should include these necessary tools:
 
-- `fs.readFile`: read a workspace file with size limits.
-- `fs.writeFile`: create or replace a workspace file.
-- `fs.appendFile`: append content to a workspace file.
-- `fs.applyPatch`: edit an existing workspace file with a patch.
-- `fs.listDirectory`: list files and directories under the workspace.
-- `fs.createDirectory`: create a directory under the workspace.
-- `fs.deleteFile`: delete a workspace file.
-- `fs.moveFile`: move or rename a workspace file.
-- `fs.stat`: read file metadata.
-- `fs.search`: search filenames or file contents under the workspace.
-- `file.parse`: parse a workspace file or uploaded file into normalized assistant-readable content.
-- `web.scrape`: fetch a URL and return extracted page content for assistant use.
+- `fs.readFile`: read the exact contents of a known workspace file when the assistant needs raw file text or bytes.
+- `fs.writeFile`: create a new workspace file or fully replace an existing file when the desired final content is known.
+- `fs.appendFile`: add content to the end of an existing workspace file without rewriting the rest of the file.
+- `fs.applyPatch`: make targeted edits to an existing workspace file while preserving unrelated content.
+- `fs.listDirectory`: inspect the immediate contents of a workspace directory to understand available files and folders.
+- `fs.createDirectory`: create a missing workspace directory before writing files or artifacts into it.
+- `fs.deleteFile`: remove a specific workspace file that is no longer needed.
+- `fs.moveFile`: rename or relocate a workspace file while preserving its contents and metadata where possible.
+- `fs.stat`: inspect metadata for a workspace path, such as existence, type, size, and modified time, without reading file contents.
+- `fs.search`: find files or matching text across the workspace when the exact path or location is not known.
+- `file.parse`: convert a workspace file or uploaded file into normalized assistant-readable content when raw file contents are not enough.
+- `web.scrape`: fetch and extract content from a URL when the assistant needs information from a web page.
 
 The `file.parse` tool should behave as a best-effort parser for arbitrary file inputs. It should detect file type from extension, MIME type, and content sniffing, then return normalized output such as text, metadata, page or sheet structure, extracted tables, and stored artifacts. Unsupported or unsafe file types should return a structured `unsupported_file_type` or `parse_failed` error instead of crashing the run.
 
@@ -134,7 +134,7 @@ The `web.scrape` tool should behave as a focused web scraper, not a general brow
 Each tool should define:
 
 - Stable tool id.
-- Human-readable name and description.
+- Human-readable name and a differentiating description.
 - Input schema.
 - Output schema.
 - Permission requirements.
@@ -143,6 +143,8 @@ Each tool should define:
 - Whether it can be used in parallel.
 - Read and write size limits.
 - Audit log metadata.
+
+Tool descriptions should make tools easy to choose correctly. Each description should state what the tool is for, what makes it different from nearby tools, and when not to use it. For example, `fs.readFile` is for reading a known path, `fs.search` is for locating unknown paths or matches, and `file.parse` is for extracting structured content from a file format.
 
 The first implementation should use these supporting services:
 
