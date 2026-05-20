@@ -3,7 +3,12 @@
   "version": "2.0.0",
   "description": "Agentic AI runtime for configurable agents, tools, skills, isolated workspaces, scheduling, and gateways",
   "type": "module",
-  "main": "dist/index.js",
+  "main": "dist/node.js",
+  "exports": {
+    ".": "./dist/node.js",
+    "./node": "./dist/node.js",
+    "./cli": "./dist/index.js"
+  },
   "bin": {
     "oa": "./dist/index.js"
   },

@@ -545,6 +545,7 @@ Required test coverage areas:
 - Web scraping for allowed URLs, blocked protocols, blocked domains, redirect limits, response size limits, timeout handling, and structured extraction output.
 - Tool permission failures and audit logs for mutating operations.
 - Skill registry behavior for built-in skills and installed skills through `oa skills -a "name of skill"`.
+- Skill discovery, filtered catalogs, activation, resource listing, activation deduplication, context protection, and eval case loading.
 - MCP registry behavior for custom MCP configuration through `oa mcp -a "example"`.
 - MCP permission enforcement so custom MCP tools are unavailable unless explicitly allowed for the agent.
 - HTTP API JSON envelopes, stable error codes, authentication, authorization, and rate limits.
