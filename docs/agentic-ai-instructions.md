@@ -335,6 +335,7 @@ Initial endpoint groups:
 - `PATCH /agents/:id`: update an agent definition.
 - `DELETE /agents/:id`: remove or disable an agent.
 - `POST /agents/:id/runs`: start a run with a prompt and optional files.
+- `POST /agents/:id/runs/stream`: start a run and stream the response over HTTP.
 - `GET /runs`: list runs.
 - `GET /runs/:id`: get run status and metadata.
 - `POST /runs/:id/cancel`: cancel a run.
@@ -351,6 +352,21 @@ Run creation through `POST /agents/:id/runs` should accept:
 - `metadata`: optional structured caller metadata.
 
 The HTTP API should support `application/json` requests for prompt-only runs and `multipart/form-data` requests for prompt plus file uploads. Uploaded files should be copied into the run's `input/` directory, recorded in run metadata, and made available to the assistant through workspace-scoped filesystem tools.
+
+The HTTP server should implement streaming responses for interactive agent runs. The baseline should use standard HTTP streaming, with Server-Sent Events-compatible framing for browser and Node.js clients. Streaming should not require WebSockets in the first implementation.
+
+HTTP stream responses should emit structured events such as:
+
+- `run.created`: run id, agent id, and workspace metadata.
+- `output.delta`: incremental assistant output.
+- `tool.started`: selected tool id and safe input metadata.
+- `tool.completed`: selected tool id, status, and safe result metadata.
+- `log`: run log entry.
+- `heartbeat`: run liveness update.
+- `run.completed`: final status and output metadata.
+- `run.failed`: stable error code and safe error message.
+
+The stream implementation should flush events as they are produced, send periodic heartbeat comments or events to keep the connection alive, support client disconnect cancellation or detachment policy, and persist the same events to the run log so non-streaming clients can retrieve them later.
 
 HTTP responses should use structured JSON envelopes with stable error codes.
 
