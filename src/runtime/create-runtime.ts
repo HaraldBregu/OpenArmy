@@ -88,6 +88,7 @@ export function createRuntime(configOverrides: Partial<RuntimeConfig> = {}): Ope
     toolRegistry,
     skillRegistry,
     providerRegistry,
+    mcpRegistry,
     heartbeatMonitor,
     runtime,
     scheduler,
