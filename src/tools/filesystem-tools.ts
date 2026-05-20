@@ -5,6 +5,11 @@ import { validationError } from "../runtime/errors.js";
 import { WorkspaceManager } from "../runtime/workspace-manager.js";
 import { ToolRegistry } from "./tool-registry.js";
 
+interface PatchHunk {
+  search: string;
+  replace: string;
+}
+
 const DEFAULT_MAX_BYTES = 1024 * 1024;
 
 function stringInput(input: JsonObject, key: string): string {
