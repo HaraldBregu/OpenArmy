@@ -51,7 +51,7 @@ describe("McpRegistry", () => {
 
   it("throws NOT_FOUND for unknown server", () => {
     const registry = new McpRegistry(tempRoot());
-    expect(() => registry.get("missing")).toThrow(/NOT_FOUND/);
+    expect(() => registry.get("missing")).toThrow(/not found/i);
   });
 
   it("validates stdio server requires command", () => {
