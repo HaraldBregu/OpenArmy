@@ -105,6 +105,7 @@ export class GatewayServer {
       }
 
       this.authorize(request);
+      this.enforceRateLimit(request);
 
       if (segments.length === 1 && segments[0] === "agents" && method === "GET") {
         this.json(response, 200, { ok: true, data: this.runtime.agentRegistry.list() });
