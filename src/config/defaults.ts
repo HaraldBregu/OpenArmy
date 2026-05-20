@@ -44,8 +44,8 @@ export function validateRuntimeConfig(config: RuntimeConfig): RuntimeConfig {
     throw validationError("workspaceRoot is required");
   }
 
-  if (!Number.isInteger(config.gateway.port) || config.gateway.port <= 0) {
-    throw validationError("gateway.port must be a positive integer");
+  if (!Number.isInteger(config.gateway.port) || config.gateway.port < 0) {
+    throw validationError("gateway.port must be a non-negative integer");
   }
 
   if (config.heartbeat.intervalMs <= 0 || config.heartbeat.timeoutMs <= 0) {
