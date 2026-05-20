@@ -92,10 +92,16 @@ program
 
 program
   .command("skills")
-  .description("List available skills")
-  .action(() => {
+  .description("List available skills or install a new one")
+  .option("-a, --add <name>", "Install a new skill with the given name")
+  .action((options: { add?: string }) => {
     const { runtime } = createRuntime();
-    console.log(JSON.stringify(runtime.skillRegistry.list(), null, 2));
+    if (options.add) {
+      const skill = runtime.skillRegistry.install(options.add);
+      console.log(JSON.stringify({ ok: true, skill }, null, 2));
+    } else {
+      console.log(JSON.stringify(runtime.skillRegistry.list(), null, 2));
+    }
   });
 
 program
