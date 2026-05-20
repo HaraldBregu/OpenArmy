@@ -37,7 +37,7 @@ export function createRuntime(configOverrides: Partial<RuntimeConfig> = {}): Ope
     ...configOverrides,
     gateway: {
       ...base.gateway,
-      ...configOverrides.gateway,
+      ...(configOverrides.gateway ?? {}),
     },
     scheduler: {
       ...base.scheduler,
