@@ -24,6 +24,10 @@ export function defaultRuntimeConfig(cwd = process.cwd()): RuntimeConfig {
       host: process.env.OPENARMY_HOST ?? "127.0.0.1",
       port: Number(process.env.OPENARMY_PORT ?? 4737),
       authToken: process.env.OPENARMY_TOKEN,
+      maxBodyBytes: Number(process.env.OPENARMY_MAX_BODY_BYTES ?? 10 * 1024 * 1024),
+      maxPromptChars: Number(process.env.OPENARMY_MAX_PROMPT_CHARS ?? 100_000),
+      maxUploadBytes: Number(process.env.OPENARMY_MAX_UPLOAD_BYTES ?? 50 * 1024 * 1024),
+      maxUploadFiles: Number(process.env.OPENARMY_MAX_UPLOAD_FILES ?? 20),
     },
     scheduler: {
       enabled: process.env.OPENARMY_SCHEDULER !== "false",
