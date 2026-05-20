@@ -89,6 +89,54 @@ export class SkillRegistry {
     };
   }
 
+  install(name: string): SkillDefinition {
+    const id = name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9._-]/g, "");
+    if (!id) {
+      throw validationError("skill name must produce a valid id");
+    }
+
+    const dir = this.skillDirectories[0];
+    if (!dir) {
+      throw validationError("no skill directory is configured");
+    }
+
+    const skillPath = path.join(dir, id);
+    if (pathExists(skillPath)) {
+      throw validationError(`skill ${id} already exists at ${skillPath}`);
+    }
+
+    fs.mkdirSync(skillPath, { recursive: true });
+
+    const manifest: SkillManifest & { id: string; name: string; version: string; description: string } = {
+      id,
+      name,
+      version: "1.0.0",
+      description: `Skill: ${name}`,
+      triggers: [],
+      requiredTools: [],
+    };
+
+    fs.writeFileSync(path.join(skillPath, "skill.json"), JSON.stringify(manifest, null, 2), "utf8");
+    fs.writeFileSync(
+      path.join(skillPath, "SKILL.md"),
+      `# ${name}\n\nDescribe what this skill does and when to use it.\n`,
+      "utf8",
+    );
+
+    const definition: SkillDefinition = {
+      id,
+      name,
+      description: manifest.description,
+      version: manifest.version,
+      sourcePath: skillPath,
+      triggers: [],
+      requiredTools: [],
+    };
+
+    this.skills.set(id, definition);
+    return definition;
+  }
+
   private readManifest(sourcePath: string): SkillManifest {
     const manifestPath = path.join(sourcePath, "skill.json");
     if (!pathExists(manifestPath)) {
