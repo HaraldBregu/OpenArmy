@@ -4,6 +4,8 @@
 
 OpenArmy should first become a minimal AI assistant runtime with only basic filesystem tools, then evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
 
+The minimal assistant should be runnable through three separate entry modules: a CLI, a Node.js module API, and an HTTP server. These entry modules should share the same core runtime implementation instead of duplicating agent execution, workspace, tool, skill, or provider logic.
+
 This document defines the first implementation direction. Treat each section as a requirement area that can be refined into tickets, architecture docs, and code changes.
 
 ## 2. Runtime Goals
@@ -13,9 +15,10 @@ The system should implement an agent runtime that can:
 - Execute one or more agents concurrently.
 - Track each agent run from creation to completion.
 - Give every agent an isolated workspace for reading, writing, and persisting task data.
+- Run through the CLI, an importable Node.js API, or the HTTP server using the same runtime core.
 - Expose agent capabilities through an HTTP API.
 - Support basic filesystem tools and other configurable tool groups.
-- Support reusable skills that extend agent behavior.
+- Support built-in skills and skills installed from the command line.
 - Support multiple model providers with runtime configuration.
 - Support cron-based scheduling and heartbeat health checks.
 
@@ -43,15 +46,26 @@ The installation script should:
 - Install or update the OpenArmy runtime.
 - Create the required local directories.
 - Initialize default configuration files.
-- Register bundled tools and skills.
+- Register bundled tools and built-in skills.
 - Validate that the CLI and runtime can start successfully.
 
 The script should be idempotent so it can be safely re-run for upgrades or repairs.
+
+The CLI should support installing or registering additional skills with:
+
+```bash
+oa skills -a "name of skill"
+```
+
+Installed skills should be persisted in the configured skill directory and made available to agents through the same `SkillRegistry` used by the CLI, Node.js API, and HTTP server.
 
 ## 4. Core Architecture
 
 The first architecture should include these modules:
 
+- `RuntimeCore`: composes the shared runtime services used by every entry module.
+- `CliEntrypoint`: runs the assistant and management commands from the command line.
+- `NodeRuntimeModule`: exposes the assistant runtime as an importable Node.js API.
 - `AgentRuntime`: creates, starts, stops, resumes, and supervises agents.
 - `AgentRegistry`: stores known agent definitions, versions, status, and metadata.
 - `RunTracker`: records active, completed, failed, paused, and cancelled runs.
@@ -63,7 +77,7 @@ The first architecture should include these modules:
 - `Scheduler`: runs agents on cron schedules.
 - `HeartbeatMonitor`: records liveness and detects stalled agents.
 
-Keep these boundaries explicit so the CLI, HTTP API, scheduler, and future UI can all use the same runtime services.
+Keep these boundaries explicit so the CLI, Node.js API, HTTP API, scheduler, and future UI can all use the same runtime services. The CLI, Node.js module, and HTTP server should be thin adapters over `RuntimeCore`; they must not implement separate agent execution logic.
 
 ## 5. Agent Definition
 
@@ -141,6 +155,8 @@ Recommended safety rules:
 ## 8. Skills
 
 Skills should be reusable instruction packages that extend agent behavior for a specific workflow or domain.
+
+Skills can be bundled as built-in skills or installed from the command line. The CLI should support adding skills with `oa skills -a "name of skill"` and should register installed skills through the shared `SkillRegistry`.
 
 Each skill should include:
 
