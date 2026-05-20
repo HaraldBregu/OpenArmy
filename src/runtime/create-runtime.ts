@@ -1,6 +1,7 @@
 import { RuntimeConfig } from "../types.js";
 import { defaultRuntimeConfig, validateRuntimeConfig } from "../config/defaults.js";
 import { HeartbeatMonitor } from "../heartbeat/heartbeat-monitor.js";
+import { McpRegistry } from "../mcp/mcp-registry.js";
 import { Scheduler } from "../scheduler/scheduler.js";
 import { registerFilesystemTools } from "../tools/filesystem-tools.js";
 import { registerPlannedToolGroups, ToolRegistry } from "../tools/tool-registry.js";
@@ -19,6 +20,7 @@ export interface OpenArmyRuntimeBundle {
   toolRegistry: ToolRegistry;
   skillRegistry: SkillRegistry;
   providerRegistry: ModelProviderRegistry;
+  mcpRegistry: McpRegistry;
   heartbeatMonitor: HeartbeatMonitor;
   runtime: AgentRuntime;
   scheduler: Scheduler;

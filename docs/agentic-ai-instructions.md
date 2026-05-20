@@ -103,7 +103,7 @@ Agent definitions should be serializable so they can be stored in configuration 
 
 ## 6. Tool Implementation
 
-The minimal assistant should ship with a controlled tool system. The first usable implementation needs basic filesystem tools, one file parsing tool, and one web scraping tool. Tools should be called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
+The minimal assistant should ship with a controlled tool system. The first usable implementation needs basic filesystem tools, one file parsing tool, and one web scraping tool. Tools should be selected through `tool_search`, then called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
 
 The first implementation should include these necessary tools:
 
@@ -146,11 +146,20 @@ Each tool should define:
 
 The first implementation should use these supporting services:
 
+- `ToolSearch`: discovers and ranks available tools for the current task, including deferred, MCP, skill-required, or plugin-provided tools.
 - `ToolRegistry`: stores tool definitions and executes tools by id.
 - `ToolAuthorizer`: checks the current agent and run permissions before execution.
 - `WorkspacePathGuard`: resolves, normalizes, and validates paths before filesystem access.
 - `FileParserRegistry`: maps file types to safe parsers used by `file.parse`.
 - `ToolAuditLogger`: records every mutating operation and failed authorization attempt.
+
+Tool selection should follow this flow:
+
+- Use `tool_search` to find candidate tools that match the current task and enabled skills.
+- Filter candidate tools through the agent definition, run policy, MCP permissions, and network policy.
+- Choose the least privileged tool that can complete the task.
+- Execute the chosen tool through `ToolRegistry`; tools must not be invoked directly from agent logic.
+- Record the search query, selected tool id, rejected candidate count, authorization decision, and execution result in run metadata.
 
 Filesystem tools must not escape the assigned workspace unless an explicit administrator-level policy allows it.
 
