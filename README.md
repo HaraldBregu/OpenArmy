@@ -1,240 +1,155 @@
-# OpenArmy (oa)
+# OpenArmy
 
-A CLI tool manager for installing and running oa-compatible npm plugins.
+OpenArmy is an agentic AI runtime for configurable local agents. It provides explicit runtime services for agent definitions, run tracking, isolated workspaces, tool authorization, reusable skills, model providers, HTTP/WebSocket gateway access, scheduling, and heartbeat monitoring.
 
-## Installation
+The legacy npm plugin-manager flow has been removed.
 
-### Using npm (recommended)
+## Runtime Surface
+
+- `AgentRuntime`: starts, cancels, pauses, resumes, supervises, and orchestrates runs.
+- `AgentRegistry`: persists serializable agent definitions under `.openarmy/agents/<agent-id>/config.json`.
+- `RunTracker`: records run metadata, status transitions, logs, tools, skills, providers, errors, and outputs.
+- `WorkspaceManager`: creates isolated per-agent and per-run workspaces.
+- `ToolRegistry`: authorizes tools per agent and per run.
+- `SkillRegistry`: discovers `SKILL.md` packages from configured skill directories.
+- `ModelProviderRegistry`: manages local/mock/provider configuration and model selection.
+- `GatewayServer`: exposes HTTP JSON endpoints and a WebSocket event gateway.
+- `Scheduler`: validates five-field cron schedules and triggers due agent runs.
+- `HeartbeatMonitor`: records liveness and marks stale active runs.
+
+## CLI
+
 ```bash
-npm install -g openarmy
-```
+npm install
+npm run build
 
-### Using curl (Linux/macOS)
-```bash
-curl -fsSL https://raw.githubusercontent.com/openarmy/openarmy/main/scripts/install.sh | bash
-```
-
-### Using PowerShell (Windows)
-```powershell
-iex "& { $(iwr -useb https://raw.githubusercontent.com/openarmy/openarmy/main/scripts/install.ps1) }"
-```
-
-## Usage
-
-### Initialize with default agents (recommended)
-```bash
+# Initialize .openarmy and register the local starter agent
 oa init
+
+# List runtime resources
+oa agents
+oa runs
+oa tools
+oa skills
+oa providers
+
+# Run an agent
+oa run local-assistant --input '{"task":"smoke"}'
+
+# Start HTTP and WebSocket gateway
+oa serve --host 127.0.0.1 --port 4737
 ```
 
-This installs default agents that come with OpenArmy:
-- **oa-transform**: Transform text (uppercase, lowercase, capitalize, reverse, title case)
-- **oa-count**: Count characters, words, and lines
-- **oa-base64**: Encode/decode base64 text
-- **oa-json**: Format, minify, or validate JSON
+During development, use `npm run dev -- <command>`.
 
-### List installed plugins
-```bash
-oa list
+## HTTP API
+
+Responses use a stable JSON envelope:
+
+```json
+{ "ok": true, "data": {} }
 ```
 
-### Run a plugin/agent
-```bash
-oa run <package-name> --input="<value>"
+Errors use:
+
+```json
+{ "ok": false, "error": { "code": "VALIDATION_ERROR", "message": "..." } }
 ```
 
-Examples:
-```bash
-# Transform text
-oa run oa-transform --input="hello world" --mode=upper
+Initial endpoints:
 
-# Count metrics
-oa run oa-count --input="Hello World" --metric=words
+- `GET /health`
+- `GET /agents`
+- `POST /agents`
+- `GET /agents/:id`
+- `PATCH /agents/:id`
+- `DELETE /agents/:id`
+- `POST /agents/:id/runs`
+- `GET /runs`
+- `GET /runs/:id`
+- `POST /runs/:id/cancel`
+- `GET /runs/:id/logs`
+- `GET /tools`
+- `GET /skills`
+- `GET /providers`
 
-# Encode to base64
-oa run oa-base64 --input="Hello" --mode=encode
+Set `OPENARMY_TOKEN` to require `Authorization: Bearer <token>` or `x-openarmy-token` on management endpoints and WebSocket upgrades. `GET /health` remains public for local health checks.
 
-# Format JSON
-echo '{"name":"test"}' | oa run oa-json --mode=format
-```
-
-### Install a custom plugin
-```bash
-oa add <package-name>
-```
-
-Example:
-```bash
-oa add oa-translate
-```
-
-### Remove a plugin
-```bash
-oa remove <package-name>
-```
-
-## Default Agents
-
-OpenArmy comes with 4 built-in agents installed via `oa init`:
-
-### oa-transform
-Text transformation utility with multiple modes:
-- `uppercase` or `upper` - Convert to uppercase
-- `lowercase` or `lower` - Convert to lowercase
-- `capitalize` - Capitalize first letter
-- `reverse` - Reverse the string
-- `title` - Title case
-
-```bash
-oa run oa-transform --input="hello" --mode=upper
-# Output: HELLO
-```
-
-### oa-count
-Count text metrics:
-- `chars` or `characters` - Character count
-- `words` - Word count
-- `lines` - Line count
-- `all` or `json` - All metrics as JSON
-
-```bash
-oa run oa-count --input="Hello World" --metric=words
-# Output: 2
-```
-
-### oa-base64
-Base64 encoding and decoding:
-- `encode` - Encode to base64 (default)
-- `decode` - Decode from base64
-
-```bash
-oa run oa-base64 --input="Hello" --mode=encode
-# Output: SGVsbG8=
-```
-
-### oa-json
-JSON formatting and validation:
-- `format` or `pretty` - Pretty-print JSON (default)
-- `minify` or `compact` - Minify JSON
-- `validate` - Validate JSON syntax
-
-```bash
-echo '{"name":"test","value":123}' | oa run oa-json --mode=minify
-# Output: {"name":"test","value":123}
-```
-
-## Creating an oa Plugin
-
-An oa plugin is a standard npm package with an `oa` field in its `package.json`:
+## Agent Definition
 
 ```json
 {
-  "name": "oa-example",
-  "version": "1.0.0",
-  "bin": { "oa-example": "./bin/cli.js" },
-  "oa": {
-    "description": "A short description shown in oa list",
-    "inputMapping": {
-      "type": "flag",
-      "flag": "--input"
+  "id": "daily-reporter",
+  "name": "Daily Reporter",
+  "description": "Creates a daily workspace report.",
+  "provider": "local",
+  "model": "local-runtime",
+  "tools": [
+    {
+      "group": "filesystem",
+      "tools": ["*"],
+      "permissions": ["filesystem:read", "filesystem:write", "filesystem:delete"]
     }
-  }
+  ],
+  "skills": [],
+  "workspacePolicy": {
+    "isolationMode": "run",
+    "maxBytes": 1048576
+  },
+  "schedule": {
+    "cron": "0 8 * * *",
+    "timezone": "UTC",
+    "enabled": true,
+    "allowOverlap": false
+  },
+  "heartbeat": {
+    "intervalMs": 15000,
+    "timeoutMs": 60000
+  },
+  "environment": {
+    "variables": [],
+    "secrets": []
+  },
+  "concurrency": 1
 }
 ```
 
-### Input Mapping Types
+## Workspace Layout
 
-#### Flag-based (type: "flag")
-Input is passed as a CLI flag:
-```json
-"inputMapping": {
-  "type": "flag",
-  "flag": "--input"
-}
+```text
+.openarmy/
+  agents/
+    <agent-id>/
+      config.json
+      memory/
+      runs/
+        <run-id>/
+          input/
+          output/
+          workspace/
+          logs/
+          state.json
+  registry/
+    runs.json
+  scheduler/
+    history.jsonl
+  skills/
 ```
 
-Command: `oa run oa-example --input="hello"`
-Executes: `oa-example --input=hello`
-
-#### Positional (type: "positional")
-Input is passed as a positional argument:
-```json
-"inputMapping": {
-  "type": "positional",
-  "position": 0
-}
-```
-
-Command: `oa run oa-example --input="hello"`
-Executes: `oa-example hello`
-
-#### Stdin (type: "stdin")
-Input is piped to stdin:
-```json
-"inputMapping": {
-  "type": "stdin"
-}
-```
-
-Command: `oa run oa-example --input="hello"`
-Executes: `oa-example` with stdin: `hello`
-
-## Project Structure
-
-```
-src/
-├── index.ts              # CLI entrypoint
-├── types.ts              # TypeScript types
-├── constants.ts          # Constants (OA_HOME, etc.)
-├── commands/             # CLI commands
-├── core/                 # Core logic (registry, installer, runner)
-└── utils/                # Utilities (fs, npm, logger)
-```
+Filesystem tools resolve and normalize paths before access, reject traversal outside the assigned run workspace, enforce read/write size limits, and write mutation audit records to `logs/audit.jsonl`.
 
 ## Development
 
-### Install dependencies
 ```bash
-npm install
-```
-
-### Build
-```bash
-npm run build
-```
-
-### Watch mode
-```bash
-npm run build:watch
-```
-
-### Run tests
-```bash
+npm run typecheck
+npm run lint
 npm test
-```
-
-### Run smoke tests
-```bash
+npm run build
 npm run test:smoke
 ```
 
-### Type check
-```bash
-npm run typecheck
-```
+## Current Scope
 
-### Lint
-```bash
-npm run lint
-```
+The first implementation includes the local runtime foundation, skill/tool registries, workspace-scoped filesystem tools, provider abstraction with a local provider, HTTP API, WebSocket gateway, scheduler, heartbeat monitor, and sub-agent lifecycle methods.
 
-## Publishing
-
-```bash
-npm login
-npm run build
-npm publish --access public
-```
-
-## License
-
-MIT
+External model execution, shell command execution, browser/web/app integrations, provider fallback, durable queueing, and database-backed state are intentionally modeled as extension points but not yet enabled by default.
