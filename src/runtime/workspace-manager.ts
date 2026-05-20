@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { randomUUID } from "crypto";
 import { AgentDefinition, RunWorkspace } from "../types.js";
 import { forbidden, validationError } from "./errors.js";
 import { appendJsonLine, ensureDir, writeJsonFile } from "./json-store.js";
@@ -93,7 +94,7 @@ export class WorkspaceManager {
 
   appendAudit(workspace: RunWorkspace, event: string, metadata: Record<string, unknown>): void {
     appendJsonLine(path.join(workspace.logsPath, "audit.jsonl"), {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       timestamp: new Date().toISOString(),
       event,
       metadata,
