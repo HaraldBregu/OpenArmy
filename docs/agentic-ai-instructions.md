@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-OpenArmy should first become a minimal AI assistant runtime with only basic filesystem tools, then evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
+OpenArmy should first become a minimal AI assistant runtime with basic filesystem tools and a web scraping tool, then evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
 
 The minimal assistant should be runnable through three separate entry modules: a CLI, a Node.js module API, and an HTTP server. These entry modules should share the same core runtime implementation instead of duplicating agent execution, workspace, tool, skill, or provider logic.
 
@@ -17,7 +17,7 @@ The system should implement an agent runtime that can:
 - Give every agent an isolated workspace for reading, writing, and persisting task data.
 - Run through the CLI, an importable Node.js API, or the HTTP server using the same runtime core.
 - Expose agent capabilities through an HTTP API.
-- Support basic filesystem tools and other configurable tool groups.
+- Support basic filesystem tools, a web scraping tool, and later other configurable tool groups.
 - Support built-in skills and skills installed from the command line.
 - Support multiple model providers with runtime configuration.
 - Support cron-based scheduling and heartbeat health checks.
@@ -103,7 +103,7 @@ Agent definitions should be serializable so they can be stored in configuration 
 
 ## 6. Tool Implementation
 
-The minimal assistant should ship with a controlled tool system, but the first usable implementation only needs basic filesystem tools. Tools should be called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
+The minimal assistant should ship with a controlled tool system. The first usable implementation needs basic filesystem tools and one web scraping tool. Tools should be called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
 
 The first implementation should include these necessary tools:
 
@@ -117,6 +117,9 @@ The first implementation should include these necessary tools:
 - `fs.moveFile`: move or rename a workspace file.
 - `fs.stat`: read file metadata.
 - `fs.search`: search filenames or file contents under the workspace.
+- `web.scrape`: fetch a URL and return extracted page content for assistant use.
+
+The `web.scrape` tool should behave as a focused web scraper, not a general browser automation tool. It should accept a URL and optional extraction settings, fetch the page, and return structured content such as title, final URL, status code, text content, selected links, metadata, and optional saved artifacts in the run workspace.
 
 Each tool should define:
 
@@ -126,6 +129,7 @@ Each tool should define:
 - Output schema.
 - Permission requirements.
 - Whether it mutates files.
+- Whether it calls the network.
 - Whether it can be used in parallel.
 - Read and write size limits.
 - Audit log metadata.
@@ -144,12 +148,16 @@ Required safety rules:
 - Resolve and normalize paths before access.
 - Reject path traversal outside the workspace.
 - Reject symlink escapes outside the workspace.
+- Require explicit network permission before `web.scrape` can fetch a URL.
+- Enforce allowed protocols, domain policy, timeouts, redirect limits, and response size limits for `web.scrape`.
+- Do not execute arbitrary page scripts in the first web scraping implementation.
 - Keep an audit log for mutating operations.
+- Keep an audit log for network fetches, including URL, final URL, status code, content type, and byte count.
 - Prefer patch-based edits for existing files.
 - Enforce size limits on reads and writes.
 - Redact secrets before writing logs.
 
-Future tool groups such as shell commands, web access, image generation, browser automation, GitHub, Figma, and sub-agents should be added later as optional tool groups. They must not be available to the minimal assistant unless explicitly registered and allowed for the agent.
+Future tool groups such as shell commands, web search, image generation, browser automation, GitHub, Figma, and sub-agents should be added later as optional tool groups. They must not be available to the minimal assistant unless explicitly registered and allowed for the agent.
 
 ## 7. Skills Implementation
 
@@ -438,6 +446,7 @@ Required test coverage areas:
 - Agent registration, run creation, status transitions, cancellation, and concurrency limits.
 - Workspace creation, run isolation, path traversal rejection, symlink escape rejection, and read/write size limits.
 - Filesystem tools for successful reads, writes, appends, patches, listings, moves, deletes, metadata, and search.
+- Web scraping for allowed URLs, blocked protocols, blocked domains, redirect limits, response size limits, timeout handling, and structured extraction output.
 - Tool permission failures and audit logs for mutating operations.
 - Skill registry behavior for built-in skills and installed skills through `oa skills -a "name of skill"`.
 - MCP registry behavior for custom MCP configuration through `oa mcp -a "example"`.
