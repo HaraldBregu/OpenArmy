@@ -54,9 +54,7 @@ export class ModelProviderRegistry {
 
   async generate(request: ModelRequest): Promise<ModelResponse> {
     if (request.provider.type === "openai-compatible") {
-      throw validationError(
-        "openai-compatible providers are configured but network execution is not implemented in the local foundation",
-      );
+      return this.openAiCompatibleResponse(request);
     }
 
     return this.localResponse(
@@ -66,6 +64,71 @@ export class ModelProviderRegistry {
       request.input,
       request.skills,
     );
+  }
+
+  private async openAiCompatibleResponse(request: ModelRequest): Promise<ModelResponse> {
+    const { provider, model, input, skills } = request;
+    if (!provider.apiBaseUrl) {
+      throw validationError(`provider ${provider.id} has no apiBaseUrl configured`);
+    }
+
+    const authHeader = this.resolveAuthHeader(provider);
+    const systemParts: string[] = skills.map((s) => `<skill id="${s.definition.id}">\n${s.instructions}\n</skill>`);
+    const systemPrompt = systemParts.length > 0 ? systemParts.join("\n\n") : undefined;
+    const userContent = typeof input === "string" ? input : JSON.stringify(input);
+
+    const messages: Array<{ role: string; content: string }> = [];
+    if (systemPrompt) {
+      messages.push({ role: "system", content: systemPrompt });
+    }
+    messages.push({ role: "user", content: userContent });
+
+    const body = JSON.stringify({ model, messages, stream: false });
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+      "content-length": String(Buffer.byteLength(body)),
+    };
+    if (authHeader) {
+      headers["authorization"] = authHeader;
+    }
+
+    const response = await fetch(`${provider.apiBaseUrl}/chat/completions`, {
+      method: "POST",
+      headers,
+      body,
+      signal: AbortSignal.timeout(provider.timeoutMs),
+    });
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "");
+      throw validationError(`provider ${provider.id} returned HTTP ${response.status}: ${text}`);
+    }
+
+    const json = await response.json() as {
+      id?: string;
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+
+    const content = json.choices?.[0]?.message?.content ?? "";
+    const requestId = json.id ?? randomUUID();
+
+    return { requestId, content, metadata: { providerType: "openai-compatible", model } };
+  }
+
+  private resolveAuthHeader(provider: ModelProviderConfig): string | undefined {
+    if (!provider.auth || provider.auth.method === "none") {
+      return undefined;
+    }
+    if (provider.auth.method === "bearer") {
+      return `Bearer ${provider.auth.envVar ?? ""}`;
+    }
+    if (provider.auth.method === "env" && provider.auth.envVar) {
+      const token = process.env[provider.auth.envVar];
+      if (token) {
+        return `Bearer ${token}`;
+      }
+    }
+    return undefined;
   }
 
   private localResponse(
