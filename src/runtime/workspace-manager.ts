@@ -6,6 +6,8 @@ import { appendJsonLine, ensureDir, writeJsonFile } from "./json-store.js";
 import { WorkspacePathGuard } from "../tools/workspace-path-guard.js";
 
 export class WorkspaceManager {
+  private readonly pathGuard = new WorkspacePathGuard();
+
   constructor(public readonly rootPath: string) {}
 
   initialize(): void {
