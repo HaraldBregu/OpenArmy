@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { AgentDefinition, NewAgentDefinition } from "../types.js";
 import { notFound, validationError } from "./errors.js";
-import { ensureDir, pathExists, readJsonFile, safeRemoveFile, writeJsonFile } from "./json-store.js";
+import { pathExists, readJsonFile, safeRemoveFile, writeJsonFile } from "./json-store.js";
 import { WorkspaceManager } from "./workspace-manager.js";
 
 const AGENT_ID_PATTERN = /^[a-z0-9][a-z0-9._-]{1,127}$/;

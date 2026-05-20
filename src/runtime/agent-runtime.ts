@@ -9,7 +9,6 @@ import {
   JsonValue,
   LoadedSkillContext,
   RunRecord,
-  RunStatus,
   RunWorkspace,
 } from "../types.js";
 import { HeartbeatMonitor } from "../heartbeat/heartbeat-monitor.js";
