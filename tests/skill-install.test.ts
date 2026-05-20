@@ -12,20 +12,6 @@ afterEach(() => {
   }
 });
 
-function tempRoot(): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), ".openarmy-skill-test-"));
-  roots.push(root);
-  return root;
-}
-
-const roots: string[] = [];
-
-afterEach(() => {
-  for (const root of roots.splice(0)) {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
-
 describe("SkillRegistry.install", () => {
   it("creates SKILL.md and skill.json in the skills directory", () => {
     const root = tempRoot();
@@ -44,7 +30,9 @@ describe("SkillRegistry.install", () => {
     const md = fs.readFileSync(path.join(skillRoot, "SKILL.md"), "utf8");
     expect(md).toContain("My Test Skill");
 
-    const manifest = JSON.parse(fs.readFileSync(path.join(skillRoot, "skill.json"), "utf8")) as { id: string };
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(skillRoot, "skill.json"), "utf8"),
+    ) as { id: string };
     expect(manifest.id).toBe("my-test-skill");
   });
 
@@ -86,3 +74,9 @@ describe("SkillRegistry.install", () => {
     expect(found).toBeDefined();
   });
 });
+
+function tempRoot(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), ".openarmy-skill-test-"));
+  roots.push(root);
+  return root;
+}
