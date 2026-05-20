@@ -8,7 +8,12 @@ export class WorkspacePathGuard {
       throw validationError("path must be a non-empty string");
     }
 
-    const resolvedRoot = path.resolve(workspaceRoot);
+    // Resolve the root via realpathSync so OS-level symlinks (e.g. /tmp → /private/tmp
+    // on macOS) don't cause false-positive containment failures.
+    const resolvedRoot = fs.existsSync(workspaceRoot)
+      ? fs.realpathSync(path.resolve(workspaceRoot))
+      : path.resolve(workspaceRoot);
+
     const resolvedPath = path.resolve(resolvedRoot, requestedPath);
     this.assertInsideRoot(resolvedPath, resolvedRoot);
 
