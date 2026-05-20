@@ -149,6 +149,22 @@ export class GatewayServer {
         return;
       }
 
+      if (segments.length === 3 && segments[0] === "runs" && segments[2] === "pause" && method === "POST") {
+        this.json(response, 200, { ok: true, data: this.runtime.pauseRun(segments[1]) });
+        return;
+      }
+
+      if (segments.length === 3 && segments[0] === "runs" && segments[2] === "resume" && method === "POST") {
+        this.json(response, 200, { ok: true, data: this.runtime.resumeRun(segments[1]) });
+        return;
+      }
+
+      if (segments.length === 3 && segments[0] === "runs" && segments[2] === "message" && method === "POST") {
+        const body = await this.readBody<JsonObject>(request);
+        this.json(response, 200, { ok: true, data: this.runtime.sendInput(segments[1], body) });
+        return;
+      }
+
       if (segments.length === 3 && segments[0] === "runs" && segments[2] === "logs" && method === "GET") {
         this.json(response, 200, { ok: true, data: this.runtime.runTracker.logs(segments[1]) });
         return;
