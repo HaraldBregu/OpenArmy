@@ -91,7 +91,7 @@ export class HeartbeatMonitor extends EventEmitter {
       timestamp: new Date().toISOString(),
       payload: {
         stale,
-        lastBeatAt: record ? new Date(record.lastBeatAt).toISOString() : undefined,
+        lastBeatAt: record ? new Date(record.lastBeatAt).toISOString() : null,
       },
     };
 

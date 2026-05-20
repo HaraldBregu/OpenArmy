@@ -32,7 +32,7 @@ export class GatewayServer {
       void this.handleHttp(request, response);
     });
     this.server.on("upgrade", (request, socket) => {
-      this.handleUpgrade(request, socket);
+      this.handleUpgrade(request, socket as Socket);
     });
 
     return new Promise((resolve) => {

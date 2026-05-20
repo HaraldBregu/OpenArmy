@@ -4,7 +4,7 @@ import fs from "fs";
 import { Command } from "commander";
 import { GatewayServer } from "./gateway/gateway-server.js";
 import { createRuntime } from "./runtime/create-runtime.js";
-import { NewAgentDefinition } from "./types.js";
+import { JsonValue, NewAgentDefinition } from "./types.js";
 
 const program = new Command();
 
@@ -134,7 +134,7 @@ if (process.argv.length === 2) {
   program.outputHelp();
 }
 
-function parseInput(inlineInput?: string, filePath?: string): unknown {
+function parseInput(inlineInput?: string, filePath?: string): JsonValue {
   if (filePath) {
     return parseMaybeJson(fs.readFileSync(filePath, "utf8"));
   }
@@ -146,9 +146,9 @@ function parseInput(inlineInput?: string, filePath?: string): unknown {
   return {};
 }
 
-function parseMaybeJson(value: string): unknown {
+function parseMaybeJson(value: string): JsonValue {
   try {
-    return JSON.parse(value);
+    return JSON.parse(value) as JsonValue;
   } catch {
     return value;
   }
