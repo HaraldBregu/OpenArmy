@@ -53,8 +53,11 @@ describe("WorkspacePathGuard", () => {
     const outsideFile = path.join(outside, "secret.txt");
     fs.writeFileSync(outsideFile, "secret", "utf8");
 
+    // Symlink uses the real path of the outside directory to avoid the OS-level
+    // /tmp → /private/tmp ambiguity on macOS.
+    const realOutside = fs.realpathSync(outside);
     const symlinkPath = path.join(root, "link");
-    fs.symlinkSync(outside, symlinkPath);
+    fs.symlinkSync(realOutside, symlinkPath);
 
     const guard = new WorkspacePathGuard();
     expect(() => guard.resolve(root, "link")).toThrow(/outside the assigned workspace/);
@@ -62,11 +65,12 @@ describe("WorkspacePathGuard", () => {
 
   it("allows real paths that resolve inside the workspace", () => {
     const root = tempRoot();
-    fs.mkdirSync(path.join(root, "real"), { recursive: true });
-    fs.writeFileSync(path.join(root, "real", "file.txt"), "data", "utf8");
+    const realRoot = fs.realpathSync(root);
+    fs.mkdirSync(path.join(realRoot, "real"), { recursive: true });
+    fs.writeFileSync(path.join(realRoot, "real", "file.txt"), "data", "utf8");
 
-    const symlinkPath = path.join(root, "link");
-    fs.symlinkSync(path.join(root, "real"), symlinkPath);
+    const symlinkPath = path.join(realRoot, "link");
+    fs.symlinkSync(path.join(realRoot, "real"), symlinkPath);
 
     const guard = new WorkspacePathGuard();
     expect(() => guard.resolve(root, "link/file.txt")).not.toThrow();
