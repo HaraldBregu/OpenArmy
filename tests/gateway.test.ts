@@ -123,6 +123,37 @@ describe("GatewayServer", () => {
     expect((await histResp.json())).toMatchObject({ ok: true, data: [] });
   });
 
+  it("exposes GET /mcp with the MCP registry contents", async () => {
+    const root = tempRoot();
+    const bundle = createRuntime({
+      workspaceRoot: root,
+      scheduler: { enabled: false },
+      gateway: { host: "127.0.0.1", port: 0 },
+      mcpServers: [
+        {
+          id: "test-mcp",
+          name: "Test MCP",
+          transport: "stdio",
+          command: "npx",
+          args: ["test-mcp"],
+          enabled: true,
+          toolPermissions: [],
+          resourcePermissions: [],
+        },
+      ],
+    });
+    bundle.runtime.registerAgent(agentDefinition());
+    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler, bundle.mcpRegistry);
+    gateways.push(gateway);
+    const address = await gateway.listen();
+    const baseUrl = `http://${address.host}:${address.port}`;
+
+    const resp = await fetch(`${baseUrl}/mcp`);
+    const envelope = (await resp.json()) as { ok: boolean; data: Array<{ id: string }> };
+    expect(envelope.ok).toBe(true);
+    expect(envelope.data.some((s) => s.id === "test-mcp")).toBe(true);
+  });
+
   it("enforces per-IP rate limiting after too many requests", async () => {
     const bundle = createRuntime({
       workspaceRoot: tempRoot(),
