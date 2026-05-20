@@ -53,6 +53,10 @@ export function validateRuntimeConfig(config: RuntimeConfig): RuntimeConfig {
     throw validationError("gateway.port must be a non-negative integer");
   }
 
+  if (config.gateway.maxBodyBytes <= 0) throw validationError("gateway.maxBodyBytes must be positive");
+  if (config.gateway.maxUploadBytes <= 0) throw validationError("gateway.maxUploadBytes must be positive");
+  if (config.gateway.maxUploadFiles <= 0) throw validationError("gateway.maxUploadFiles must be positive");
+
   if (config.heartbeat.intervalMs <= 0 || config.heartbeat.timeoutMs <= 0) {
     throw validationError("heartbeat intervals must be positive");
   }
