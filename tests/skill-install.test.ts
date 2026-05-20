@@ -12,6 +12,20 @@ afterEach(() => {
   }
 });
 
+function tempRoot(): string {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), ".openarmy-skill-test-"));
+  roots.push(root);
+  return root;
+}
+
+const roots: string[] = [];
+
+afterEach(() => {
+  for (const root of roots.splice(0)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 describe("SkillRegistry.install", () => {
   it("creates SKILL.md and skill.json in the skills directory", () => {
     const root = tempRoot();
