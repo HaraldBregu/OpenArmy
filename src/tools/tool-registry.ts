@@ -10,8 +10,10 @@ import {
   ToolGroupDefinition,
   ToolHandler,
 } from "../types.js";
-import { forbidden, notFound, validationError } from "../runtime/errors.js";
+import { notFound, validationError } from "../runtime/errors.js";
 import { RunTracker } from "../runtime/run-tracker.js";
+import { ToolAuthorizer } from "./tool-authorizer.js";
+import { ToolAuditLogger } from "./tool-audit-logger.js";
 
 interface RegisteredTool {
   definition: ToolDefinition;
