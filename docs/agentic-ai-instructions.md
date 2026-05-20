@@ -566,6 +566,7 @@ Required test coverage areas:
 - MCP permission enforcement so custom MCP tools are unavailable unless explicitly allowed for the agent.
 - HTTP API JSON envelopes, stable error codes, authentication, authorization, and rate limits.
 - HTTP run creation with prompt-only JSON, multipart prompt plus files, upload size limits, filename sanitization, and run input workspace persistence.
+- HTTP streaming run responses for output deltas, tool events, logs, heartbeat events, completion, errors, disconnect handling, and persisted replay through logs.
 - Scheduler execution, skipped overlapping runs, missed runs, and schedule history.
 - Heartbeat updates, stale-run detection, and heartbeat events in run metadata.
 - Secret redaction in logs, audit records, tool results, and error responses.
@@ -596,9 +597,9 @@ Tests should use temporary workspaces and must clean up after themselves. Tests 
 ### Phase 3: HTTP API
 
 - Add HTTP API.
-- Stream run events and logs.
+- Stream run responses, run events, and logs over standard HTTP streaming.
 - Add structured API errors.
-- Add tests for health, agents, runs, tools, skills, MCP, providers, logs, auth, and rate limits.
+- Add tests for health, agents, runs, streaming responses, tools, skills, MCP, providers, logs, auth, and rate limits.
 
 ### Phase 4: Scheduling and Heartbeat
 
