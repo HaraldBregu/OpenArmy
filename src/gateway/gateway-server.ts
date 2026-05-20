@@ -308,7 +308,7 @@ export class GatewayServer {
     }
   }
 
-  private async readBody<T extends JsonValue>(request: IncomingMessage, fallback?: T): Promise<T> {
+  private async readBody<T>(request: IncomingMessage, fallback?: T): Promise<T> {
     const chunks: Buffer[] = [];
     for await (const chunk of request) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -325,7 +325,7 @@ export class GatewayServer {
     return JSON.parse(raw) as T;
   }
 
-  private json<T extends JsonValue>(response: ServerResponse, statusCode: number, envelope: ApiEnvelope<T>): void {
+  private json<T>(response: ServerResponse, statusCode: number, envelope: ApiEnvelope<T>): void {
     const body = JSON.stringify(envelope);
     response.writeHead(statusCode, {
       "content-type": "application/json; charset=utf-8",
