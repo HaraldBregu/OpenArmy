@@ -182,6 +182,59 @@ export function registerFilesystemTools(registry: ToolRegistry, workspaceManager
   );
 
   registry.registerTool(
+    baseDefinition(
+      "filesystem.applyPatch",
+      "Edit an existing workspace file by applying search-and-replace hunks in order.",
+      ["filesystem:write"],
+      true,
+    ),
+    (input, context) => {
+      const relativePath = stringInput(input, "path");
+      const rawHunks = input["hunks"];
+      if (!Array.isArray(rawHunks) || rawHunks.length === 0) {
+        throw validationError("hunks must be a non-empty array");
+      }
+
+      const hunks: PatchHunk[] = rawHunks.map((h, index) => {
+        if (typeof h !== "object" || h === null) {
+          throw validationError(`hunk at index ${index} must be an object`);
+        }
+        const hunk = h as Record<string, unknown>;
+        if (typeof hunk["search"] !== "string" || !(hunk["search"] as string).length) {
+          throw validationError(`hunk at index ${index} must have a non-empty search string`);
+        }
+        if (typeof hunk["replace"] !== "string") {
+          throw validationError(`hunk at index ${index} must have a replace string`);
+        }
+        return { search: hunk["search"] as string, replace: hunk["replace"] as string };
+      });
+
+      const filePath = workspaceManager.resolveInWorkspace(context.workspace.workspacePath, relativePath);
+      const maxBytes = context.agent.workspacePolicy.maxBytes ?? DEFAULT_MAX_BYTES;
+      workspaceManager.enforceReadLimit(filePath, maxBytes);
+
+      let content = fs.readFileSync(filePath, "utf8");
+      for (const hunk of hunks) {
+        const index = content.indexOf(hunk.search);
+        if (index === -1) {
+          throw validationError(
+            `patch hunk search string not found: ${hunk.search.slice(0, 80)}${hunk.search.length > 80 ? "…" : ""}`,
+          );
+        }
+        content = content.slice(0, index) + hunk.replace + content.slice(index + hunk.search.length);
+      }
+
+      workspaceManager.enforceWriteLimit(content, maxBytes);
+      fs.writeFileSync(filePath, content, "utf8");
+      workspaceManager.appendAudit(context.workspace, "filesystem.applyPatch", {
+        path: relativePath,
+        hunks: hunks.length,
+      });
+      return { path: relativePath, applied: hunks.length };
+    },
+  );
+
+  registry.registerTool(
     baseDefinition("filesystem.searchFiles", "Search filenames and file contents inside the workspace.", ["filesystem:read"], false),
     (input, context) => {
       const query = stringInput(input, "query");
