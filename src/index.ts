@@ -114,9 +114,10 @@ program
   .action(async (options: { host?: string; port?: string }) => {
     const bundle = createRuntime({
       gateway: {
-        host: options.host ?? undefined,
-        port: options.port ? Number(options.port) : undefined,
-      } as never,
+        host: options.host ?? process.env.OPENARMY_HOST ?? "127.0.0.1",
+        port: options.port ? Number(options.port) : Number(process.env.OPENARMY_PORT ?? 4737),
+        authToken: process.env.OPENARMY_TOKEN,
+      },
     });
     const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway);
     const address = await gateway.listen();
