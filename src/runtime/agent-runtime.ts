@@ -229,6 +229,7 @@ export class AgentRuntime extends EventEmitter {
     workspace: RunWorkspace,
   ): Promise<void> {
     const heartbeat = agent.heartbeat ?? this.services.defaultHeartbeat;
+    let providerUsageRequestId: string | undefined;
     this.services.heartbeatMonitor.startRun(runId, heartbeat);
     this.services.runTracker.transition(runId, "running", "loading skills");
     this.emitRunEvent("run.running", runId, agent.id, {});
@@ -243,6 +244,7 @@ export class AgentRuntime extends EventEmitter {
         startedAt: new Date().toISOString(),
         status: "running" as const,
       };
+      providerUsageRequestId = providerUsage.requestId;
       this.services.runTracker.addProviderUsage(runId, providerUsage);
 
       this.services.runTracker.transition(runId, "running", "model execution");
@@ -261,6 +263,10 @@ export class AgentRuntime extends EventEmitter {
         completedAt: new Date().toISOString(),
       });
 
+      if (this.shouldStopExecution(runId)) {
+        return;
+      }
+
       const output = {
         content: response.content,
         metadata: response.metadata ?? {},
@@ -271,6 +277,16 @@ export class AgentRuntime extends EventEmitter {
       this.emitRunEvent("run.completed", runId, agent.id, output);
     } catch (error) {
       const payload = toErrorPayload(error);
+      if (providerUsageRequestId) {
+        this.services.runTracker.updateProviderUsage(runId, providerUsageRequestId, {
+          status: "failed",
+          completedAt: new Date().toISOString(),
+          error: payload.message,
+        });
+      }
+      if (this.shouldStopExecution(runId)) {
+        return;
+      }
       this.services.runTracker.setError(runId, payload.code, payload.message, payload.details);
       this.services.runTracker.transition(runId, "failed", "failed");
       this.services.runTracker.appendLog(runId, "error", "run.failed", payload.message, {
@@ -281,6 +297,11 @@ export class AgentRuntime extends EventEmitter {
         message: payload.message,
       });
     }
+  }
+
+  private shouldStopExecution(runId: string): boolean {
+    const status = this.services.runTracker.get(runId).status;
+    return status === "cancelled" || status === "stale";
   }
 
   private loadSkills(agent: AgentDefinition, runId: string): LoadedSkillContext[] {

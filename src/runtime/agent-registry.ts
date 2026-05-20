@@ -36,6 +36,7 @@ export class AgentRegistry {
   }
 
   register(input: NewAgentDefinition): AgentDefinition {
+    this.validateAgentInput(input);
     const now = new Date().toISOString();
     const agent: AgentDefinition = {
       ...input,
@@ -93,20 +94,41 @@ export class AgentRegistry {
 
   private validateAgent(agent: AgentDefinition): void {
     this.validateId(agent.id);
-    if (!agent.name.trim()) {
+    if (typeof agent.name !== "string" || !agent.name.trim()) {
       throw validationError("agent name is required");
     }
-    if (!agent.provider.trim()) {
+    if (typeof agent.provider !== "string" || !agent.provider.trim()) {
       throw validationError("agent provider is required");
     }
-    if (!agent.model.trim()) {
+    if (typeof agent.model !== "string" || !agent.model.trim()) {
       throw validationError("agent model is required");
+    }
+    if (!["run", "agent"].includes(agent.workspacePolicy.isolationMode)) {
+      throw validationError("workspace isolationMode must be either run or agent");
     }
     if (agent.concurrency < 1) {
       throw validationError("agent concurrency must be at least 1");
     }
     if (agent.workspacePolicy.maxBytes !== undefined && agent.workspacePolicy.maxBytes <= 0) {
       throw validationError("workspace maxBytes must be positive when provided");
+    }
+  }
+
+  private validateAgentInput(input: NewAgentDefinition): void {
+    if (typeof input.id !== "string") {
+      throw validationError("agent id is required");
+    }
+    if (typeof input.name !== "string") {
+      throw validationError("agent name is required");
+    }
+    if (typeof input.description !== "string") {
+      throw validationError("agent description is required");
+    }
+    if (typeof input.provider !== "string") {
+      throw validationError("agent provider is required");
+    }
+    if (typeof input.model !== "string") {
+      throw validationError("agent model is required");
     }
   }
 }

@@ -28,6 +28,15 @@ function optionalString(input: JsonObject, key: string): string | undefined {
   return value;
 }
 
+function contentInput(input: JsonObject, key: string): string {
+  const value = input[key];
+  if (typeof value !== "string") {
+    throw validationError(`${key} must be a string`);
+  }
+
+  return value;
+}
+
 function baseDefinition(
   name: string,
   description: string,
@@ -77,7 +86,7 @@ export function registerFilesystemTools(registry: ToolRegistry, workspaceManager
     baseDefinition("filesystem.writeFile", "Write a workspace file, creating parent directories.", ["filesystem:write"], true),
     (input, context) => {
       const relativePath = stringInput(input, "path");
-      const content = stringInput(input, "content");
+      const content = contentInput(input, "content");
       const filePath = workspaceManager.resolveInWorkspace(context.workspace.workspacePath, relativePath);
       const maxBytes = context.agent.workspacePolicy.maxBytes ?? DEFAULT_MAX_BYTES;
       workspaceManager.enforceWriteLimit(content, maxBytes);
@@ -92,7 +101,7 @@ export function registerFilesystemTools(registry: ToolRegistry, workspaceManager
     baseDefinition("filesystem.appendFile", "Append text to a workspace file.", ["filesystem:write"], true),
     (input, context) => {
       const relativePath = stringInput(input, "path");
-      const content = stringInput(input, "content");
+      const content = contentInput(input, "content");
       const filePath = workspaceManager.resolveInWorkspace(context.workspace.workspacePath, relativePath);
       const maxBytes = context.agent.workspacePolicy.maxBytes ?? DEFAULT_MAX_BYTES;
       workspaceManager.enforceWriteLimit(content, maxBytes);
