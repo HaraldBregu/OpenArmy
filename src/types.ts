@@ -71,6 +71,7 @@ export interface AgentDefinition {
   provider: string;
   model: string;
   tools: AgentToolGrant[];
+  mcpServers?: AgentMcpGrant[];
   skills: string[];
   workspacePolicy: WorkspacePolicy;
   schedule?: AgentSchedule;
