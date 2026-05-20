@@ -1,9 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
-import { AgentDefinition, RunWorkspace } from "../types.js";
-import { forbidden, validationError } from "./errors.js";
+import { AgentDefinition, JsonObject, RunWorkspace } from "../types.js";
 import { appendJsonLine, ensureDir, writeJsonFile } from "./json-store.js";
+import { WorkspacePathGuard } from "../tools/workspace-path-guard.js";
 
 export class WorkspaceManager {
   constructor(public readonly rootPath: string) {}
