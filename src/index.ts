@@ -113,6 +113,31 @@ program
   });
 
 program
+  .command("mcp")
+  .description("List configured MCP servers or add a new one")
+  .option("-a, --add <name>", "Add a new MCP server configuration with the given name")
+  .action((options: { add?: string }) => {
+    const { mcpRegistry } = createRuntime();
+    if (options.add) {
+      const id = options.add.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9._-]/g, "");
+      const server = mcpRegistry.register({
+        id,
+        name: options.add,
+        transport: "stdio",
+        command: "npx",
+        args: [id],
+        env: [],
+        enabled: true,
+        toolPermissions: [],
+        resourcePermissions: [],
+      });
+      console.log(JSON.stringify({ ok: true, server }, null, 2));
+    } else {
+      console.log(JSON.stringify(mcpRegistry.list(), null, 2));
+    }
+  });
+
+program
   .command("serve")
   .description("Start the HTTP and WebSocket gateway")
   .option("--host <host>", "Host to bind")
