@@ -85,7 +85,11 @@ export class ToolRegistry {
       throw notFound("Tool", name);
     }
 
-    this.assertAllowed(context.agent, registered.definition);
+    if (!this.authorizer.isAllowed(context.agent, registered.definition)) {
+      this.auditLogger.appendDenied(context.workspace, name, context.agent.id, "permission denied");
+      this.authorizer.assertAllowed(context.agent, registered.definition);
+    }
+
     this.validateObjectInput(input);
 
     const callId = randomUUID();
