@@ -15,15 +15,17 @@ afterEach(() => {
 describe("WorkspacePathGuard", () => {
   it("resolves valid paths inside the workspace", () => {
     const root = tempRoot();
+    const realRoot = fs.realpathSync(root);
     const guard = new WorkspacePathGuard();
     const resolved = guard.resolve(root, "subdir/file.txt");
-    expect(resolved).toBe(path.join(root, "subdir", "file.txt"));
+    expect(resolved).toBe(path.join(realRoot, "subdir", "file.txt"));
   });
 
   it("allows the workspace root itself", () => {
     const root = tempRoot();
+    const realRoot = fs.realpathSync(root);
     const guard = new WorkspacePathGuard();
-    expect(guard.resolve(root, ".")).toBe(path.resolve(root));
+    expect(guard.resolve(root, ".")).toBe(realRoot);
   });
 
   it("rejects path traversal outside the workspace", () => {
