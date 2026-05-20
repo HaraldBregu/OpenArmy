@@ -150,7 +150,7 @@ program
         authToken: process.env.OPENARMY_TOKEN,
       },
     });
-    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler);
+    const gateway = new GatewayServer(bundle.runtime, bundle.config.gateway, bundle.scheduler, bundle.mcpRegistry);
     const address = await gateway.listen();
     console.log(JSON.stringify({ ok: true, gateway: address }, null, 2));
   });
