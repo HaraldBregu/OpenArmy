@@ -322,6 +322,10 @@ export interface RuntimeConfig {
     host: string;
     port: number;
     authToken?: string;
+    maxBodyBytes: number;
+    maxPromptChars: number;
+    maxUploadBytes: number;
+    maxUploadFiles: number;
   };
   scheduler: {
     enabled: boolean;
