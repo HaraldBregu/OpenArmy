@@ -65,20 +65,7 @@ export class WorkspaceManager {
   }
 
   resolveInWorkspace(workspaceRoot: string, requestedPath: string): string {
-    if (!requestedPath || requestedPath.includes("\0")) {
-      throw validationError("path must be a non-empty string");
-    }
-
-    const resolvedRoot = path.resolve(workspaceRoot);
-    const resolvedPath = path.resolve(resolvedRoot, requestedPath);
-    const insideRoot =
-      resolvedPath === resolvedRoot || resolvedPath.startsWith(`${resolvedRoot}${path.sep}`);
-
-    if (!insideRoot) {
-      throw forbidden("filesystem access outside the assigned workspace is not allowed");
-    }
-
-    return resolvedPath;
+    return this.pathGuard.resolve(workspaceRoot, requestedPath);
   }
 
   enforceReadLimit(filePath: string, maxBytes: number): void {

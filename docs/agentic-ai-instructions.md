@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-OpenArmy should first become a minimal AI assistant runtime with basic filesystem tools and a web scraping tool, then evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
+OpenArmy should first become a minimal AI assistant runtime with basic filesystem tools, a file parsing tool, and a web scraping tool, then evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
 
 The minimal assistant should be runnable through three separate entry modules: a CLI, a Node.js module API, and an HTTP server. These entry modules should share the same core runtime implementation instead of duplicating agent execution, workspace, tool, skill, or provider logic.
 
@@ -17,7 +17,7 @@ The system should implement an agent runtime that can:
 - Give every agent an isolated workspace for reading, writing, and persisting task data.
 - Run through the CLI, an importable Node.js API, or the HTTP server using the same runtime core.
 - Expose agent capabilities through an HTTP API.
-- Support basic filesystem tools, a web scraping tool, and later other configurable tool groups.
+- Support basic filesystem tools, a file parsing tool, a web scraping tool, and later other configurable tool groups.
 - Support built-in skills and skills installed from the command line.
 - Support multiple model providers with runtime configuration.
 - Support cron-based scheduling and heartbeat health checks.
@@ -103,7 +103,7 @@ Agent definitions should be serializable so they can be stored in configuration 
 
 ## 6. Tool Implementation
 
-The minimal assistant should ship with a controlled tool system. The first usable implementation needs basic filesystem tools and one web scraping tool. Tools should be called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
+The minimal assistant should ship with a controlled tool system. The first usable implementation needs basic filesystem tools, one file parsing tool, and one web scraping tool. Tools should be called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
 
 The first implementation should include these necessary tools:
 
@@ -117,7 +117,17 @@ The first implementation should include these necessary tools:
 - `fs.moveFile`: move or rename a workspace file.
 - `fs.stat`: read file metadata.
 - `fs.search`: search filenames or file contents under the workspace.
+- `file.parse`: parse a workspace file or uploaded file into normalized assistant-readable content.
 - `web.scrape`: fetch a URL and return extracted page content for assistant use.
+
+The `file.parse` tool should behave as a best-effort parser for arbitrary file inputs. It should detect file type from extension, MIME type, and content sniffing, then return normalized output such as text, metadata, page or sheet structure, extracted tables, and stored artifacts. Unsupported or unsafe file types should return a structured `unsupported_file_type` or `parse_failed` error instead of crashing the run.
+
+The first parser implementation should support common assistant inputs:
+
+- Plain text, Markdown, JSON, YAML, CSV, TSV, HTML, XML, and source code files.
+- PDF files.
+- Office-style documents and spreadsheets when a safe parser is available.
+- Image metadata, with OCR treated as an optional later capability.
 
 The `web.scrape` tool should behave as a focused web scraper, not a general browser automation tool. It should accept a URL and optional extraction settings, fetch the page, and return structured content such as title, final URL, status code, text content, selected links, metadata, and optional saved artifacts in the run workspace.
 
@@ -139,6 +149,7 @@ The first implementation should use these supporting services:
 - `ToolRegistry`: stores tool definitions and executes tools by id.
 - `ToolAuthorizer`: checks the current agent and run permissions before execution.
 - `WorkspacePathGuard`: resolves, normalizes, and validates paths before filesystem access.
+- `FileParserRegistry`: maps file types to safe parsers used by `file.parse`.
 - `ToolAuditLogger`: records every mutating operation and failed authorization attempt.
 
 Filesystem tools must not escape the assigned workspace unless an explicit administrator-level policy allows it.
@@ -148,6 +159,9 @@ Required safety rules:
 - Resolve and normalize paths before access.
 - Reject path traversal outside the workspace.
 - Reject symlink escapes outside the workspace.
+- Require explicit file parsing permission before `file.parse` can process uploaded or workspace files.
+- Enforce parser input size limits, output size limits, and safe temporary directories for `file.parse`.
+- Treat parser failures as structured tool results, not runtime crashes.
 - Require explicit network permission before `web.scrape` can fetch a URL.
 - Enforce allowed protocols, domain policy, timeouts, redirect limits, and response size limits for `web.scrape`.
 - Do not execute arbitrary page scripts in the first web scraping implementation.
@@ -460,6 +474,7 @@ Required test coverage areas:
 - Agent registration, run creation, status transitions, cancellation, and concurrency limits.
 - Workspace creation, run isolation, path traversal rejection, symlink escape rejection, and read/write size limits.
 - Filesystem tools for successful reads, writes, appends, patches, listings, moves, deletes, metadata, and search.
+- File parsing for text, JSON, CSV, PDF, unsupported file types, parser failures, input size limits, and normalized output.
 - Web scraping for allowed URLs, blocked protocols, blocked domains, redirect limits, response size limits, timeout handling, and structured extraction output.
 - Tool permission failures and audit logs for mutating operations.
 - Skill registry behavior for built-in skills and installed skills through `oa skills -a "name of skill"`.
