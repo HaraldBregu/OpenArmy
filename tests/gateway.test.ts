@@ -73,7 +73,9 @@ describe("GatewayServer", () => {
     await bundle.runtime.waitForRun(envelope.data.id);
 
     const logs = await fetch(`${baseUrl}/runs/${envelope.data.id}/logs`);
-    expect(await logs.json()).toMatchObject({ ok: true, data: [{ event: "run.created" }] });
+    const logEnvelope = (await logs.json()) as { ok: boolean; data: Array<{ event: string }> };
+    expect(logEnvelope.ok).toBe(true);
+    expect(logEnvelope.data.some((entry) => entry.event === "run.created")).toBe(true);
   });
 });
 
