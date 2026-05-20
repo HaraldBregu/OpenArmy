@@ -68,36 +68,11 @@ export class ToolRegistry {
   }
 
   isAllowed(agent: AgentDefinition, definition: ToolDefinition): boolean {
-    return agent.tools.some((grant) => {
-      const groupMatches = grant.group === "*" || grant.group === definition.group;
-      if (!groupMatches) {
-        return false;
-      }
-
-      const toolMatches =
-        !grant.tools ||
-        grant.tools.includes("*") ||
-        grant.tools.includes(definition.name) ||
-        grant.tools.includes(definition.name.replace(`${definition.group}.`, ""));
-
-      if (!toolMatches) {
-        return false;
-      }
-
-      if (definition.permissionRequirements.length === 0) {
-        return true;
-      }
-
-      return definition.permissionRequirements.every(
-        (permission) => grant.permissions?.includes("*") || grant.permissions?.includes(permission),
-      );
-    });
+    return this.authorizer.isAllowed(agent, definition);
   }
 
   assertAllowed(agent: AgentDefinition, definition: ToolDefinition): void {
-    if (!this.isAllowed(agent, definition)) {
-      throw forbidden(`agent ${agent.id} is not allowed to use tool ${definition.name}`);
-    }
+    this.authorizer.assertAllowed(agent, definition);
   }
 
   async execute(
