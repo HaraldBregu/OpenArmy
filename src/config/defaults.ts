@@ -34,6 +34,7 @@ export function defaultRuntimeConfig(cwd = process.cwd()): RuntimeConfig {
     },
     skillDirectories: [path.join(workspaceRoot, "skills")],
     providers: [DEFAULT_PROVIDER],
+    mcpServers: [],
     logLevel: "info",
     toolPermissions: [],
   };
