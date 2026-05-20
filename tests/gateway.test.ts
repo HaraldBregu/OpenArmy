@@ -4,7 +4,7 @@ import path from "path";
 import { afterEach, describe, expect, it } from "vitest";
 import { GatewayServer } from "../src/gateway/gateway-server.js";
 import { createRuntime } from "../src/runtime/create-runtime.js";
-import { NewAgentDefinition } from "../src/types.js";
+import { NewAgentDefinition, RunRecord } from "../src/types.js";
 
 const roots: string[] = [];
 const gateways: GatewayServer[] = [];
