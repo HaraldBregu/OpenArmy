@@ -367,6 +367,23 @@ export class GatewayServer {
     }
   }
 
+  private enforceRateLimit(request: IncomingMessage): void {
+    const key = request.socket.remoteAddress ?? "unknown";
+    const now = Date.now();
+    const windowMs = 60_000;
+
+    let record = this.rateLimits.get(key);
+    if (!record || now > record.resetAt) {
+      record = { count: 0, resetAt: now + windowMs };
+      this.rateLimits.set(key, record);
+    }
+
+    record.count += 1;
+    if (record.count > this.maxRequestsPerMinute) {
+      throw new OpenArmyError("RATE_LIMITED", "too many requests", 429);
+    }
+  }
+
   private async readBody<T>(request: IncomingMessage, fallback?: T): Promise<T> {
     const chunks: Buffer[] = [];
     for await (const chunk of request) {
