@@ -275,7 +275,7 @@ export interface GatewayMessage {
   payload: JsonValue;
 }
 
-export interface ApiEnvelope<T = JsonValue> {
+export interface ApiEnvelope<T = unknown> {
   ok: boolean;
   data?: T;
   error?: {
