@@ -100,81 +100,119 @@ Each agent should be configurable with:
 
 Agent definitions should be serializable so they can be stored in configuration files, a local registry, or later a database.
 
-## 6. Tool System
+## 6. Tool Implementation
 
-The agent runtime should expose tools through a controlled registry. Tools should not be called directly without permission checks.
+The minimal assistant should ship with a controlled tool system, but the first usable implementation only needs basic filesystem tools. Tools should be called only through `ToolRegistry`, which performs registration, schema validation, permission checks, execution, and audit logging.
 
-Initial tool groups to support:
+The first implementation should include these necessary tools:
 
-- Shell/workspace: run commands, stream stdin, and edit files with patches.
-- Planning: update a task plan.
-- Parallel calls: run independent shell or read actions in parallel.
-- Sub-agents: spawn, message, wait for, resume, and close agents.
-- MCP resources: list and read MCP-provided resources.
-- Tool discovery: search deferred or plugin-provided tools.
-- Web: search/open pages, click/find text, screenshots, weather, finance, sports, and time.
-- Image generation: generate or edit images.
-- Apps/plugins: Browser, Figma, GitHub, Documents, Presentations, Spreadsheets, Vercel plugin, and Photoshop.
+- `fs.readFile`: read a workspace file with size limits.
+- `fs.writeFile`: create or replace a workspace file.
+- `fs.appendFile`: append content to a workspace file.
+- `fs.applyPatch`: edit an existing workspace file with a patch.
+- `fs.listDirectory`: list files and directories under the workspace.
+- `fs.createDirectory`: create a directory under the workspace.
+- `fs.deleteFile`: delete a workspace file.
+- `fs.moveFile`: move or rename a workspace file.
+- `fs.stat`: read file metadata.
+- `fs.search`: search filenames or file contents under the workspace.
 
 Each tool should define:
 
-- Name and description.
+- Stable tool id.
+- Human-readable name and description.
 - Input schema.
 - Output schema.
 - Permission requirements.
-- Whether it can mutate files, call networks, or launch long-running work.
+- Whether it mutates files.
 - Whether it can be used in parallel.
+- Read and write size limits.
 - Audit log metadata.
 
-The runtime should enforce tool authorization per agent and per run.
+The first implementation should use these supporting services:
 
-## 7. Basic Filesystem Tools
-
-The first tool implementation should include basic filesystem operations scoped to the agent workspace:
-
-- Read file.
-- Write file.
-- Append file.
-- List directory.
-- Create directory.
-- Delete file.
-- Move or rename file.
-- Check file metadata.
-- Search files.
+- `ToolRegistry`: stores tool definitions and executes tools by id.
+- `ToolAuthorizer`: checks the current agent and run permissions before execution.
+- `WorkspacePathGuard`: resolves, normalizes, and validates paths before filesystem access.
+- `ToolAuditLogger`: records every mutating operation and failed authorization attempt.
 
 Filesystem tools must not escape the assigned workspace unless an explicit administrator-level policy allows it.
 
-Recommended safety rules:
+Required safety rules:
 
 - Resolve and normalize paths before access.
 - Reject path traversal outside the workspace.
+- Reject symlink escapes outside the workspace.
 - Keep an audit log for mutating operations.
 - Prefer patch-based edits for existing files.
 - Enforce size limits on reads and writes.
+- Redact secrets before writing logs.
 
-## 8. Skills
+Future tool groups such as shell commands, web access, image generation, browser automation, GitHub, Figma, and sub-agents should be added later as optional tool groups. They must not be available to the minimal assistant unless explicitly registered and allowed for the agent.
 
-Skills should be reusable instruction packages that extend agent behavior for a specific workflow or domain.
+## 7. Skills Implementation
 
-Skills can be bundled as built-in skills or installed from the command line. The CLI should support adding skills with `oa skills -a "name of skill"` and should register installed skills through the shared `SkillRegistry`.
+Skills should be reusable instruction packages that extend assistant behavior for a specific workflow or domain. Skills do not execute code by themselves; they provide instructions, references, templates, scripts, and metadata that the assistant may load during a run.
+
+Skills can be bundled as built-in skills or installed from the command line. The CLI should support adding skills with:
+
+```bash
+oa skills -a "name of skill"
+```
+
+Built-in skills should live in the packaged runtime. Installed skills should be persisted in the configured skill directory and registered through the same `SkillRegistry` used by the CLI, Node.js API, and HTTP server.
 
 Each skill should include:
 
+- `skill.json`: skill id, name, version, description, permissions, and trigger metadata.
 - `SKILL.md`: primary instructions.
-- Optional references, scripts, templates, or assets.
-- Trigger rules that describe when the skill should be used.
-- Required tools or permissions.
+- Optional `references/`, `scripts/`, `templates/`, or `assets/` directories.
+- Required tool permissions.
 - Version metadata.
 
-The runtime should support:
+The `SkillRegistry` should support:
 
-- Listing available skills.
+- Listing built-in and installed skills.
 - Installing or registering skills.
+- Validating skill metadata.
 - Enabling skills per agent.
-- Loading only the skill context needed for the current run.
+- Resolving only the skill context needed for the current run.
 - Tracking which skills were used during a run.
 
-Skills should not bypass the tool permission model. If a skill needs filesystem, browser, GitHub, Figma, or network access, the agent must also have permission to use the matching tools.
+Skills should not bypass the tool permission model. If a skill needs filesystem, MCP, browser, GitHub, Figma, or network access, the agent must also have permission to use the matching tools.
+
+## 8. Custom MCP
+
+The runtime should support custom MCP servers as optional extensions. MCP configuration should be managed through the CLI and stored in local configuration so the CLI, Node.js API, and HTTP server all load the same MCP registry.
+
+The CLI should support adding an MCP configuration with:
+
+```bash
+oa mcp -a "example"
+```
+
+An MCP entry should include:
+
+- MCP id.
+- Display name.
+- Transport type, such as `stdio` or `http`.
+- Command and arguments for `stdio` servers.
+- URL for HTTP servers.
+- Allowed environment variables or secret references.
+- Working directory, when needed.
+- Enabled or disabled status.
+- Tool and resource permissions exposed by the MCP server.
+
+The MCP registry should support:
+
+- Listing configured MCP servers.
+- Adding or updating MCP server definitions.
+- Enabling MCP tools per agent.
+- Starting and stopping MCP connections.
+- Listing MCP resources and tools through the normal permission model.
+- Recording MCP tool calls and resource reads in the run audit log.
+
+Custom MCP tools should never be available globally by default. An agent must explicitly allow the MCP server or specific MCP tools before a run can use them.
 
 ## 9. Model Providers
 
