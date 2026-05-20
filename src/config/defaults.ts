@@ -57,5 +57,9 @@ export function validateRuntimeConfig(config: RuntimeConfig): RuntimeConfig {
     throw validationError("at least one model provider must be configured");
   }
 
+  if (!Array.isArray(config.mcpServers)) {
+    throw validationError("mcpServers must be an array");
+  }
+
   return config;
 }
