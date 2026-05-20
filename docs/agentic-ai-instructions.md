@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-OpenArmy should evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
+OpenArmy should first become a minimal AI assistant runtime with only basic filesystem tools, then evolve from a CLI tool manager into an agentic AI runtime that can run configurable agents with tools, skills, isolated workspaces, model providers, an HTTP API gateway, scheduling, heartbeat monitoring, and multi-agent orchestration.
 
 This document defines the first implementation direction. Treat each section as a requirement area that can be refined into tickets, architecture docs, and code changes.
 
