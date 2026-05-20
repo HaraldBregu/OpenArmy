@@ -482,6 +482,7 @@ Required test coverage areas:
 - `RuntimeCore` composition shared by CLI, Node.js API, and HTTP server.
 - Agent registration, run creation, status transitions, cancellation, and concurrency limits.
 - Workspace creation, run isolation, path traversal rejection, symlink escape rejection, and read/write size limits.
+- Tool search selection, rejected candidate filtering, least-privilege selection, and execution through `ToolRegistry`.
 - Filesystem tools for successful reads, writes, appends, patches, listings, moves, deletes, metadata, and search.
 - File parsing for text, JSON, CSV, PDF, unsupported file types, parser failures, input size limits, and normalized output.
 - Web scraping for allowed URLs, blocked protocols, blocked domains, redirect limits, response size limits, timeout handling, and structured extraction output.
