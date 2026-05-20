@@ -1,14 +1,15 @@
 {
   "name": "@hb_army/openarmy",
-  "version": "1.0.0",
-  "description": "CLI tool for installing and running oa-compatible npm plugins",
-  "main": "dist/oa.js",
+  "version": "2.0.0",
+  "description": "Agentic AI runtime for configurable agents, tools, skills, isolated workspaces, scheduling, and gateways",
+  "type": "module",
+  "main": "dist/index.js",
   "bin": {
-    "oa": "./bin/oa"
+    "oa": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsx scripts/build.ts",
-    "build:watch": "tsx scripts/build.ts --watch",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "dev": "tsx src/index.ts",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
@@ -19,15 +20,14 @@
   },
   "files": [
     "dist/",
-    "bin/",
-    "agents/",
-    "scripts/install.sh",
-    "scripts/install.ps1"
+    "README.md",
+    "docs/"
   ],
   "keywords": [
-    "cli",
-    "plugin",
-    "npm",
+    "agents",
+    "ai-runtime",
+    "tools",
+    "skills",
     "openarmy"
   ],
   "author": "",
